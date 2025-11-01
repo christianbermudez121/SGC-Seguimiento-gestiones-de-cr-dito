@@ -7,6 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Folder Include="Dtos\" />
+    <Folder Include="Mapeos\" />
+    <Folder Include="Servicios\" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="Servicios\" />
   </ItemGroup>
 

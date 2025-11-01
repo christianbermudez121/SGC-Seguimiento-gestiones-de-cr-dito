@@ -8,6 +8,11 @@
 
   <ItemGroup>
     <Folder Include="Entidades\" />
+    <Folder Include="Repositorios\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Entidades\" />
   </ItemGroup>
 
 </Project>
