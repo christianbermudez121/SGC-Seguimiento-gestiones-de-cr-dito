@@ -1,0 +1,146 @@
+﻿@model IEnumerable<ProyectoSGCDAL.Entities.Cliente>
+@{
+    ViewData["Title"] = "Clientes";
+    var filtro = ViewBag.Filtro as string;
+    bool? activos = ViewBag.Activos as bool?;
+}
+
+<h2 class="mb-3">Administración de Clientes</h2>
+
+<div class="mb-3 d-flex gap-2 flex-wrap">
+    <form asp-action="Index" method="get" class="d-flex gap-2 flex-wrap">
+        <input name="q" value="@filtro" class="form-control" placeholder="Buscar por identificación/nombre/correo" />
+
+        @* >>> CORRECCIÓN RZ1031: No poner C# dentro de atributos. 
+           Renderizamos opciones con @if para decidir selected. *@
+        <select name="activos" class="form-control">
+            @if (activos == null)
+            {
+                <option value="" selected>Todos</option>
+            }
+            else
+            {
+                <option value="">Todos</option>
+            }
+            @if (activos == true)
+            {
+                <option value="true" selected>Activos</option>
+            }
+            else
+            {
+                <option value="true">Activos</option>
+            }
+            @if (activos == false)
+            {
+                <option value="false" selected>Inactivos</option>
+            }
+            else
+            {
+                <option value="false">Inactivos</option>
+            }
+        </select>
+
+        <button class="btn btn-success">Filtrar</button>
+    </form>
+
+    <button class="btn btn-primary" id="btnNuevo" data-url="@Url.Action("CreateModal", "Clientes")">
+        Nuevo
+    </button>
+</div>
+
+@if (TempData["ok"] != null)
+{
+    <div class="alert alert-success">@TempData["ok"]</div>
+}
+@if (TempData["err"] != null)
+{
+    <div class="alert alert-danger">@TempData["err"]</div>
+}
+
+<!-- Contenedor del grid -->
+<div id="grid">
+    @* >>> CORRECCIÓN MVC1000: usar Tag Helper <partial> en lugar de Html.Partial *@
+    <partial name="_Grid" model="Model" />
+</div>
+
+<!-- Host del modal Bootstrap 5 -->
+<div class="modal fade" id="app-modal" tabindex="-1" aria-labelledby="appModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content"><!-- se carga por AJAX --></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Cargar contenido en modal (GET parcial)
+        function openModal(url){
+            const $modal = $("#app-modal");
+            $modal.find(".modal-content").html('<div class="p-5 text-center">Cargando...</div>');
+            const modal = new bootstrap.Modal(document.getElementById('app-modal'));
+            modal.show();
+            $.get(url).done(function(html){
+                $modal.find(".modal-content").html(html);
+                $.validator.unobtrusive.parse($modal);
+            }).fail(function(){
+                $modal.find(".modal-content").html('<div class="p-4 text-danger">Error al cargar.</div>');
+            });
+        }
+
+        // Refrescar grid con filtros actuales
+        function refreshGrid(){
+            const q = $('input[name="q"]').val() || "";
+            const act = $('select[name="activos"]').val() || "";
+            $("#grid").load('@Url.Action("ListPartial", "Clientes")' + `?q=${encodeURIComponent(q)}&activos=${encodeURIComponent(act)}`);
+        }
+
+        // Token antiforgery para POST por AJAX (Delete/Desactivar)
+        function getToken() {
+            return $('input[name="__RequestVerificationToken"]').first().val();
+        }
+
+        // Botón Nuevo
+        $("#btnNuevo").on("click", function(){ openModal($(this).data("url")); });
+
+        // Abrir modales desde la tabla
+        $(document).on("click",".js-open-modal", function(){ openModal($(this).data("url")); });
+
+        // Enviar Create/Edit por AJAX
+        $(document).on("submit","form.js-ajax-form", function(e){
+            e.preventDefault();
+            const $f = $(this);
+            $.ajax({
+                url: $f.attr("action"),
+                method: $f.attr("method"),
+                data: $f.serialize()
+            }).done(function(res){
+                if(res && res.ok){
+                    const modalEl = document.getElementById('app-modal');
+                    const modalInst = bootstrap.Modal.getInstance(modalEl);
+                    modalInst.hide();
+                    Swal.fire({icon:"success", title:res.msg || "Operación exitosa", timer:1500, showConfirmButton:false});
+                    refreshGrid();
+                } else {
+                    $("#app-modal .modal-content").html(res);
+                    $.validator.unobtrusive.parse($("#app-modal"));
+                }
+            }).fail(function(){
+                Swal.fire({icon:"error", title:"Error de red"});
+            });
+        });
+
+        // Acciones POST simples (eliminar, desactivar)
+        $(document).on("click",".js-post", function(){
+            const url = $(this).data("url");
+            $.post(url, { __RequestVerificationToken: getToken() })
+             .done(function(res){
+                if(res.ok){
+                    Swal.fire({icon:"success", title:res.msg, timer:1500, showConfirmButton:false});
+                    refreshGrid();
+                } else {
+                    Swal.fire({icon:"error", title: res.msg || "Operación no realizada"});
+                }
+             }).fail(()=> Swal.fire({icon:"error", title:"Error de red"}));
+        });
+    </script>
+}
