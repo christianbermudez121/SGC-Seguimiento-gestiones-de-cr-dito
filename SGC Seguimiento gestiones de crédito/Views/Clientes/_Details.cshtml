@@ -1,0 +1,29 @@
+﻿@model ProyectoSGCDAL.Entities.Cliente
+
+<div class="modal-header">
+    <h5 class="modal-title">Detalle de Cliente</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+</div>
+
+<div class="modal-body">
+    <dl class="row">
+        <dt class="col-sm-4">Identificación</dt>
+        <dd class="col-sm-8">@Model.Identificacion</dd>
+        <dt class="col-sm-4">Nombre</dt>
+        <dd class="col-sm-8">@($"{Model.Nombre} {Model.Apellido1} {Model.Apellido2}")</dd>
+        <dt class="col-sm-4">Correo</dt>
+        <dd class="col-sm-8">@Model.Correo</dd>
+        <dt class="col-sm-4">Teléfono</dt>
+        <dd class="col-sm-8">@Model.Telefono</dd>
+        <dt class="col-sm-4">Fecha Nac.</dt>
+        <dd class="col-sm-8">@Model.FechaNacimiento?.ToString("yyyy-MM-dd")</dd>
+        <dt class="col-sm-4">Activo</dt>
+        <dd class="col-sm-8">@((Model.Activo) ? "Sí" : "No")</dd>
+        <dt class="col-sm-4">Registrado</dt>
+        <dd class="col-sm-8">@Model.FechaRegistro.ToLocalTime()</dd>
+    </dl>
+</div>
+
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+</div>
