@@ -19,4 +19,8 @@
     <ProjectReference Include="..\ProyectoSGCDAL\ProyectoSGCDAL.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ProyectoSGCDAL\ProyectoSGCDAL.csproj" />
+  </ItemGroup>
+
 </Project>

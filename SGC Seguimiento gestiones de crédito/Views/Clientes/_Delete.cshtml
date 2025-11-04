@@ -1,0 +1,23 @@
+﻿@model ProyectoSGCDAL.Entities.Cliente
+
+<div class="modal-header">
+    <h5 class="modal-title text-danger">Eliminar Cliente</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+</div>
+
+<div class="modal-body">
+    <p>
+        ¿Seguro que deseas eliminar al cliente
+        <strong>@Model.Nombre @Model.Apellido1</strong>
+        (ID: @Model.Identificacion)?
+    </p>
+</div>
+
+<div class="modal-footer">
+    <form asp-action="DeleteAjax" asp-controller="Clientes" method="post" class="js-ajax-form">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="id" value="@Model.Id" />
+        <button class="btn btn-danger" type="submit">Eliminar</button>
+        <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Cancelar</button>
+    </form>
+</div>
