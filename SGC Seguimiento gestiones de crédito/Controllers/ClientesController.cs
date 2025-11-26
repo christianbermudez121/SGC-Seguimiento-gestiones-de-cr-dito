@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using ProyectoSGCBLL.Services;
 using ProyectoSGCDAL.Entities;
 
 namespace SGC.Web.Controllers
 {
+    [Authorize(Roles = "Administrador")]
     public class ClientesController : Controller
     {
         private readonly IClienteService _svc;

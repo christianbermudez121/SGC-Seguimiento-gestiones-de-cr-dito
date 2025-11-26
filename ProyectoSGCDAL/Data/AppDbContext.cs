@@ -1,9 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using ProyectoSGCDAL.Entities;
+
 
 namespace ProyectoSGCDAL.Data
 {
-    public class AppDbContext : DbContext
+    public class AppDbContext : IdentityDbContext<ApplicationUser>
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
@@ -24,8 +26,8 @@ namespace ProyectoSGCDAL.Data
                 e.Property(x => x.Correo).HasMaxLength(120);
                 e.Property(x => x.Telefono).HasMaxLength(40);
                 e.HasIndex(x => x.Identificacion).IsUnique();
-                
             });
         }
     }
 }
+

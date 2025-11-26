@@ -1,0 +1,10 @@
+﻿@model LoginViewModel
+
+<h2>Login</h2>
+
+<form asp-action="Login" method="post">
+    <input asp-for="Email" placeholder="Email" class="form-control" />
+    <input asp-for="Password" placeholder="Password" type="password" class="form-control" />
+    <input asp-for="RememberMe" type="checkbox" /> Recordarme
+    <button class="btn btn-primary">Ingresar</button>
+</form>
