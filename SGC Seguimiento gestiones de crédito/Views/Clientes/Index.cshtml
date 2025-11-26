@@ -73,74 +73,135 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        // Inicializar tabla al cargar la página por primera vez
+        $(document).ready(function () {
+
+            if ($.fn.DataTable.isDataTable("#tblClientes")) {
+                $("#tblClientes").DataTable().destroy();
+            }
+
+            $("#tblClientes").DataTable({
+                paging: true,
+                searching: false,
+                info: false,
+                responsive: true
+            });
+        });
+
         // Cargar contenido en modal (GET parcial)
-        function openModal(url){
+        function openModal(url) {
             const $modal = $("#app-modal");
             $modal.find(".modal-content").html('<div class="p-5 text-center">Cargando...</div>');
             const modal = new bootstrap.Modal(document.getElementById('app-modal'));
             modal.show();
-            $.get(url).done(function(html){
-                $modal.find(".modal-content").html(html);
-                $.validator.unobtrusive.parse($modal);
-            }).fail(function(){
-                $modal.find(".modal-content").html('<div class="p-4 text-danger">Error al cargar.</div>');
-            });
+
+            $.get(url)
+                .done(function (html) {
+                    $modal.find(".modal-content").html(html);
+                    $.validator.unobtrusive.parse($modal);
+                })
+                .fail(function () {
+                    $modal.find(".modal-content").html('<div class="p-4 text-danger">Error al cargar.</div>');
+                });
         }
 
         // Refrescar grid con filtros actuales
-        function refreshGrid(){
+        function refreshGrid() {
             const q = $('input[name="q"]').val() || "";
             const act = $('select[name="activos"]').val() || "";
-            $("#grid").load('@Url.Action("ListPartial", "Clientes")' + `?q=${encodeURIComponent(q)}&activos=${encodeURIComponent(act)}`);
+
+            const urlBase = '@Url.Action("ListPartial", "Clientes")';
+
+        $("#grid").load(
+            urlBase + "?q=" + encodeURIComponent(q) + "&activos=" + encodeURIComponent(act),
+
+                function () {
+
+                    // Destruir DataTables anterior si existe
+                    if ($.fn.DataTable.isDataTable("#tblClientes")) {
+                        $("#tblClientes").DataTable().destroy();
+                    }
+
+                    // Re-inicializar DataTables
+                    $("#tblClientes").DataTable({
+                        paging: true,
+                        searching: false,
+                        info: false,
+                        responsive: true
+                    });
+                }
+            );
         }
 
-        // Token antiforgery para POST por AJAX (Delete/Desactivar)
+        // Token antiforgery para POST por AJAX
         function getToken() {
             return $('input[name="__RequestVerificationToken"]').first().val();
         }
 
         // Botón Nuevo
-        $("#btnNuevo").on("click", function(){ openModal($(this).data("url")); });
+        $("#btnNuevo").on("click", function () {
+            openModal($(this).data("url"));
+        });
 
         // Abrir modales desde la tabla
-        $(document).on("click",".js-open-modal", function(){ openModal($(this).data("url")); });
+        $(document).on("click", ".js-open-modal", function () {
+            openModal($(this).data("url"));
+        });
 
         // Enviar Create/Edit por AJAX
-        $(document).on("submit","form.js-ajax-form", function(e){
+        $(document).on("submit", "form.js-ajax-form", function (e) {
             e.preventDefault();
+
             const $f = $(this);
+
             $.ajax({
                 url: $f.attr("action"),
                 method: $f.attr("method"),
                 data: $f.serialize()
-            }).done(function(res){
-                if(res && res.ok){
+            }).done(function (res) {
+                if (res && res.ok) {
                     const modalEl = document.getElementById('app-modal');
                     const modalInst = bootstrap.Modal.getInstance(modalEl);
                     modalInst.hide();
-                    Swal.fire({icon:"success", title:res.msg || "Operación exitosa", timer:1500, showConfirmButton:false});
+
+                    Swal.fire({
+                        icon: "success",
+                        title: res.msg || "Operación exitosa",
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+
                     refreshGrid();
                 } else {
                     $("#app-modal .modal-content").html(res);
                     $.validator.unobtrusive.parse($("#app-modal"));
                 }
-            }).fail(function(){
-                Swal.fire({icon:"error", title:"Error de red"});
+            }).fail(function () {
+                Swal.fire({ icon: "error", title: "Error de red" });
             });
         });
 
-        // Acciones POST simples (eliminar, desactivar)
-        $(document).on("click",".js-post", function(){
+        // Acciones POST simples
+        $(document).on("click", ".js-post", function () {
             const url = $(this).data("url");
+
             $.post(url, { __RequestVerificationToken: getToken() })
-             .done(function(res){
-                if(res.ok){
-                    Swal.fire({icon:"success", title:res.msg, timer:1500, showConfirmButton:false});
-                    refreshGrid();
-                } else {
-                    Swal.fire({icon:"error", title: res.msg || "Operación no realizada"});
-                }
-             }).fail(()=> Swal.fire({icon:"error", title:"Error de red"}));
+                .done(function (res) {
+                    if (res.ok) {
+                        Swal.fire({
+                            icon: "success",
+                            title: res.msg,
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+
+                        refreshGrid();
+                    } else {
+                        Swal.fire({ icon: "error", title: res.msg || "Operación no realizada" });
+                    }
+                })
+                .fail(() => Swal.fire({ icon: "error", title: "Error de red" }));
         });
     </script>
+
 }

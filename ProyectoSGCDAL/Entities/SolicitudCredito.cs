@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProyectoSGCDAL.Entidades
+namespace ProyectoSGCDAL.Entities
 {
     public class SolicitudCredito
     {
@@ -12,7 +12,7 @@ namespace ProyectoSGCDAL.Entidades
         public string identificacion { get; set; } = string.Empty;
         public int IdCliente { get; set; }
         public decimal MontoSolicitado { get; set; }
-        public String comentarios { get; set; } = string.Empty;
+        public string comentarios { get; set; } = string.Empty;
         public string Documento { get; set; } = string.Empty;
         public DateTime FechaSolicitud { get; set; } = DateTime.Now;
         public string Estado { get; set; } = "Registrado";
