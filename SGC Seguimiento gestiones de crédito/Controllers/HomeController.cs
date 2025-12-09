@@ -1,8 +1,8 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using SGC_Seguimiento_gestiones_de_crédito.Models;
+using SGC_Seguimiento_gestiones_de_credito.Models;
 
-namespace SGC_Seguimiento_gestiones_de_crédito.Controllers
+namespace SGC_Seguimiento_gestiones_de_credito.Controllers
 {
     public class HomeController : Controller
     {

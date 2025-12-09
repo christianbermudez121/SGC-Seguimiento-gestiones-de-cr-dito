@@ -1,4 +1,4 @@
-namespace SGC_Seguimiento_gestiones_de_crédito.Models
+namespace SGC_Seguimiento_gestiones_de_credito.Models
 {
     public class ErrorViewModel
     {

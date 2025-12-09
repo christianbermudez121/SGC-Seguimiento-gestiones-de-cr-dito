@@ -1,0 +1,47 @@
+﻿@model List<SGC_Seguimiento_gestiones_de_credito.Models.SolicitudCredito>
+
+<h2>Listado de Solicitudes</h2>
+
+<a class="btn btn-success mb-3" href="/Solicitudes/Crear">
+    <i class="fas fa-plus"></i> Nueva Solicitud
+</a>
+
+<table class="table table-striped table-bordered">
+    <thead class="table-dark">
+        <tr>
+            <th>Id</th>
+            <th>ClienteId</th>
+            <th>Monto</th>
+            <th>Estado</th>
+            <th>Fecha Registro</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var s in Model)
+        {
+            <tr>
+                <td>@s.Id</td>
+                <td>@s.ClienteId</td>
+                <td>@s.Monto</td>
+                <td>@s.Estado</td>
+                <td>@s.FechaRegistro.ToString("dd/MM/yyyy")</td>
+                <td>
+                    <a class="btn btn-primary btn-sm" href="/Solicitudes/Editar/@s.Id">
+                        <i class="fas fa-edit"></i> Editar
+                    </a>
+                    <a class="btn btn-danger btn-sm" href="/Solicitudes/Eliminar/@s.Id"
+                       onclick="return confirm('¿Seguro que deseas eliminar esta solicitud?');">
+                        <i class="fas fa-trash"></i> Eliminar
+                    </a>
+                    <a class="btn btn-info btn-sm" href="/Solicitudes/Historial/@s.Id">
+                        <i class="fas fa-history"></i> Historial
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
