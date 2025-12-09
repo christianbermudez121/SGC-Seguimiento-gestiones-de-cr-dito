@@ -1,0 +1,29 @@
+﻿@model List<SGC_Seguimiento_gestiones_de_credito.Models.HistorialSolicitud>
+
+<h2>Historial de la Solicitud</h2>
+
+<table class="table table-striped table-bordered mt-3">
+    <thead class="table-dark">
+        <tr>
+            <th>Id</th>
+            <th>Acción</th>
+            <th>Usuario</th>
+            <th>Fecha</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var h in Model)
+        {
+            <tr>
+                <td>@h.Id</td>
+                <td>@h.Accion</td>
+                <td>@h.Usuario</td>
+                <td>@h.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a class="btn btn-secondary mt-3" href="/Solicitudes/Index">
+    <i class="fas fa-arrow-left"></i> Volver al listado
+</a>
