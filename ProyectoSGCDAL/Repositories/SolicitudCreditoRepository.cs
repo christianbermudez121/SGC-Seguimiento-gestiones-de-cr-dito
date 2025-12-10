@@ -10,7 +10,7 @@ namespace ProyectoSGCDAL.Repositories
     public class SolicitudCreditoRepository : ISolicitudCreditoRepository
     {
         private List<SolicitudCredito> solicitudes = new List<SolicitudCredito>()
-            {
+        {
             new SolicitudCredito
             {
                 IdSolicitud = 1,
@@ -33,10 +33,7 @@ namespace ProyectoSGCDAL.Repositories
             }
         };
 
-
-
-
-    public async Task<bool> AgregarSolicitudAsync(SolicitudCredito solicitudcredito)
+        public async Task<bool> AgregarSolicitudAsync(SolicitudCredito solicitudcredito)
         {
             solicitudcredito.IdSolicitud = solicitudes.Any() ? solicitudes.Max(s => s.IdSolicitud) + 1 : 1;
             return true;
@@ -46,6 +43,12 @@ namespace ProyectoSGCDAL.Repositories
         {
             var solicitud = solicitudes.FirstOrDefault(s => s.identificacion == identificacion);
             return solicitud;
+        }
+
+        public async Task<List<SolicitudCredito>> ObtenerSolicitudesAsync()
+        {
+            // Devolver una copia de la lista internamente almacenada para no exponer la referencia directa
+            return await Task.FromResult(solicitudes.ToList());
         }
     }
 }

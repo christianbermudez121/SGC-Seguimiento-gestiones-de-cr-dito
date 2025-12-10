@@ -1,0 +1,38 @@
+@model IEnumerable<SGC_Seguimiento_gestiones_de_crédito.Models.UserViewModel>
+
+@{
+    ViewData["Title"] = "Administrar usuarios";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Crear usuario</a>
+</p>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Email</th>
+            <th>Roles</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var u in Model)
+    {
+        <tr>
+            <td>@u.Email</td>
+            <td>@string.Join(", ", u.Roles)</td>
+            <td>
+                <a asp-action="Delete" asp-route-id="@u.Id" class="btn btn-danger">Eliminar</a>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>

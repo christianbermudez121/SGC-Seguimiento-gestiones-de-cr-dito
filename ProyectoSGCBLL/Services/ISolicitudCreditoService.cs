@@ -10,5 +10,9 @@ namespace ProyectoSGCBLL.Services
     public interface ISolicitudCreditoService
     {
         Task<CustomResponse<SolicitudCreditoDto>> AgregarSolicitudCredito(SolicitudCreditoDto solicitudCreditoDto);
+
+        Task<CustomResponse<SolicitudCreditoDto>> ObtenerSolicitudesCreditoPorIdentificacion(string identificacion);
+
+        Task<CustomResponse<List<SolicitudCreditoDto>>> ObtenerSolicitudesCredito();
     }
 }

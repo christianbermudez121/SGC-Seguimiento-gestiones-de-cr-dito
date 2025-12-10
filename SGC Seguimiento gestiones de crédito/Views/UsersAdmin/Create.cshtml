@@ -1,0 +1,52 @@
+@model SGC_Seguimiento_gestiones_de_crédito.Models.CreateUserViewModel
+
+@{
+    ViewData["Title"] = "Crear usuario";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+@* Mostrar errores de validación del modelo en un alert visible *@
+<div asp-validation-summary="All" class="alert alert-danger" role="alert" style="display:@(ViewData.ModelState.IsValid ? "none" : "block")"></div>
+
+<form method="post" asp-action="Create">
+    <div class="mb-3">
+        <label asp-for="Email" class="form-label"></label>
+        <input asp-for="Email" class="form-control" />
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Password" class="form-label"></label>
+        <input asp-for="Password" class="form-control" />
+        <span asp-validation-for="Password" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="ConfirmPassword" class="form-label"></label>
+        <input asp-for="ConfirmPassword" class="form-control" />
+        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Rol</label>
+        <select asp-for="SelectedRole" class="form-select">
+            <option value="">-- Ninguno --</option>
+            @foreach (var r in Model.AvailableRoles)
+            {
+                <option value="@r">@r</option>
+            }
+        </select>
+    </div>
+
+    <button class="btn btn-primary">Crear</button>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

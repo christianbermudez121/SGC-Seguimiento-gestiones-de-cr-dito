@@ -22,34 +22,57 @@
                     SGC Seguimiento de Credito
                 </a>
 
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                        aria-controls="navbarNav" aria-expanded="false" aria-label="Mostrar navegación">
-                <a class="navbar-brand" asp-controller="Home" asp-action="Index">SGC_Seguimiento_gestiones_de_crédito</a>
-
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse"
                         aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav me-auto">
+                <div class="collapse navbar-collapse navbar-collapse d-sm-inline-flex justify-content-between">
+                    @{
+                        var ctrl = ViewContext.RouteData.Values["controller"]?.ToString();
+                    }
 
-                @{
-                    var ctrl = ViewContext.RouteData.Values["controller"]?.ToString();
-                }
-
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
+                        @* Mostrar enlace a SolicitudCredito sólo para ServicioCliente *@
+                        @if (User.IsInRole("ServicioCliente"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark @(ctrl == "SolicitudCredito" ? "active" : "")"
+                                   asp-controller="SolicitudCredito" asp-action="Index">SolicitudCredito</a>
+                            </li>
+                        }
+
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Home" asp-action="Index">Inicio</a>
-                            <a class="nav-link text-dark @(ctrl == "Home" ? "active" : "")"
-                               asp-controller="Home" asp-action="Index">Inicio</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Home" asp-action="Privacy">Privacidad</a>
                             <a class="nav-link text-dark @(ctrl == "Clientes" ? "active" : "")"
                                asp-controller="Clientes" asp-action="Index">Clientes</a>
                         </li>
+
+                        @* Mostrar panel de administración de usuarios sólo para Administrador *@
+                        @if (User.IsInRole("Administrador"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark @(ctrl == "UsersAdmin" ? "active" : "")"
+                                   asp-controller="UsersAdmin" asp-action="Index">Administrar usuarios</a>
+                            </li>
+                        }
+                    </ul>
+
+                    <ul class="navbar-nav">
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Account" asp-action="Logout">Cerrar sesión</a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Account" asp-action="Login">Iniciar sesión</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Account" asp-action="Register">Registro</a>
+                            </li>
+                        }
                     </ul>
                 </div>
             </div>
@@ -58,7 +81,6 @@
 
     <div class="container">
         <main role="main" class="pb-3">
-            
             @RenderBody()
         </main>
     </div>
@@ -71,7 +93,6 @@
         </div>
     </footer>
 
-
     <!-- jQuery -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
 
@@ -83,7 +104,6 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
 
-
     <!-- DataTables CSS -->
     <link rel="stylesheet" href="https://cdn.datatables.net/v/bs5/dt-2.3.4/datatables.min.css" />
 
@@ -94,7 +114,5 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     @await RenderSectionAsync("Scripts", required: false)
-
-
 </body>
 </html>

@@ -1,0 +1,24 @@
+@model SGC_Seguimiento_gestiones_de_crédito.Models.UserViewModel
+
+@{
+    ViewData["Title"] = "Eliminar usuario";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<div>
+    <h4>¿Desea eliminar el siguiente usuario?</h4>
+    <dl class="row">
+        <dt class="col-sm-2">Email</dt>
+        <dd class="col-sm-10">@Model.Email</dd>
+
+        <dt class="col-sm-2">Roles</dt>
+        <dd class="col-sm-10">@string.Join(", ", Model.Roles)</dd>
+    </dl>
+
+    <form method="post" asp-action="DeleteConfirmed">
+        <input type="hidden" name="id" value="@Model.Id" />
+        <button class="btn btn-danger">Eliminar</button>
+        <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>

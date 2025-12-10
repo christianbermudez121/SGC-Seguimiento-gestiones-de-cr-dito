@@ -1,5 +1,117 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model IEnumerable<ProyectoSGCBLL.Dtos.SolicitudCreditoDto>
+
 @{
+    ViewData["Title"] = "Solicitudes de crédito";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<p>
+    @if (User.IsInRole("ServicioCliente"))
+    {
+        <button id="btnCrear" class="btn btn-primary">Crear solicitud</button>
+    }
+</p>
+
+<div id="alertPlaceholder"></div>
+
+<table class="table table-striped" id="solicitudesTable">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Identificación</th>
+            <th>Monto</th>
+            <th>Comentarios</th>
+            <th>Documento</th>
+        </tr>
+    </thead>
+    <tbody>
+    @if (Model != null)
+    {
+        foreach (var s in Model)
+        {
+            <tr data-id="@s.Id">
+                <td>@s.Id</td>
+                <td>@s.Identificacion</td>
+                <td>@s.MontoSolicitado</td>
+                <td>@s.Comentarios</td>
+                <td>@s.Documento</td>
+            </tr>
+        }
+    }
+    </tbody>
+</table>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        const createPartialUrl = '@Url.Action("CreatePartial","SolicitudCredito")';
+        const createAjaxUrl = '@Url.Action("CreateAjax","SolicitudCredito")';
+
+        document.getElementById('btnCrear')?.addEventListener('click', async () => {
+            // Cargar la vista parcial con el formulario
+            const r = await fetch(createPartialUrl);
+            const html = await r.text();
+
+            const { value: formHtml } = await Swal.fire({
+                title: 'Crear solicitud',
+                html: html,
+                showCancelButton: true,
+                focusConfirm: false,
+                confirmButtonText: 'Guardar',
+                didOpen: () => {
+                    // focus en el primer input si existe
+                    const first = document.querySelector('#crearSolicitudForm input, #crearSolicitudForm textarea');
+                    if (first) first.focus();
+                },
+                preConfirm: () => {
+                    // devolver el formulario para ser enviado luego
+                    const form = document.getElementById('crearSolicitudForm');
+                    if (!form) {
+                        Swal.showValidationMessage('Formulario inválido');
+                        return false;
+                    }
+                    return new FormData(form);
+                }
+            });
+
+            if (!formHtml) return; // cancelado o no válido
+
+            // Enviar FormData usando fetch
+            const formData = formHtml; // ya es FormData por preConfirm
+            // Extraer token antiforgery (si está presente como campo oculto) y enviar en encabezado
+            const token = formData.get('__RequestVerificationToken');
+            const headers = token ? { 'RequestVerificationToken': token } : {};
+
+            const fetchResp = await fetch(createAjaxUrl, {
+                method: 'POST',
+                headers: headers,
+                body: formData
+            });
+
+            if (!fetchResp.ok) {
+                const err = await fetchResp.json().catch(() => ({ message: 'Error al crear' }));
+                Swal.fire('Error', err.message || 'Error al crear solicitud', 'error');
+                return;
+            }
+
+            const result = await fetchResp.json();
+            Swal.fire('Ok', result.message || 'Creado', 'success');
+
+            // Actualizar tabla sin recargar: insertar nueva fila al inicio
+            const data = result.data;
+            if (data) {
+                const tbody = document.querySelector('#solicitudesTable tbody');
+                const tr = document.createElement('tr');
+                tr.setAttribute('data-id', data.id || '');
+                tr.innerHTML = `<td>${data.id ?? ''}</td>
+                                <td>${data.identificacion ?? ''}</td>
+                                <td>${data.montoSolicitado ?? ''}</td>
+                                <td>${data.comentarios ?? ''}</td>
+                                <td>${data.documento ?? ''}</td>`;
+                if (tbody) tbody.prepend(tr);
+            }
+        });
+    </script>
 }

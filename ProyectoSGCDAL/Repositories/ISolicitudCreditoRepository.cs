@@ -11,5 +11,6 @@ namespace ProyectoSGCDAL.Repositories
     {
         Task<SolicitudCredito> ObtenerPorIdentificacionAsync(string identificacion);
         Task<bool> AgregarSolicitudAsync(SolicitudCredito solicitudcredito);
+        Task<List<SolicitudCredito>> ObtenerSolicitudesAsync();
     }
 }
