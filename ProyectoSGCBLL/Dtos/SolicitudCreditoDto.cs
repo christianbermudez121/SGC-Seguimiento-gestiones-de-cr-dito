@@ -13,5 +13,6 @@ namespace ProyectoSGCBLL.Dtos
         public decimal MontoSolicitado { get; set; }
         public string Comentarios { get; set; } = string.Empty;
         public string Documento { get; set; }
+        public string Estado { get; set; } = string.Empty;
     }
 }

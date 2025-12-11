@@ -1,4 +1,6 @@
-﻿using ProyectoSGCDAL.Entities;
+﻿using Microsoft.EntityFrameworkCore;
+using ProyectoSGCDAL.Entities;
+using ProyectoSGCDAL.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,46 +11,82 @@ namespace ProyectoSGCDAL.Repositories
 {
     public class SolicitudCreditoRepository : ISolicitudCreditoRepository
     {
-        private List<SolicitudCredito> solicitudes = new List<SolicitudCredito>()
+        private readonly AppDbContext _context;
+
+        public SolicitudCreditoRepository(AppDbContext context)
         {
-            new SolicitudCredito
-            {
-                IdSolicitud = 1,
-                identificacion = "1234567890",
-                IdCliente = 1,
-                MontoSolicitado = 5000,
-                comentarios = "Necesito el crédito para comprar un vehículo.",
-                FechaSolicitud = DateTime.Now.AddDays(-10),
-                Estado = "Aprobado"
-            },
-            new SolicitudCredito
-            {
-                IdSolicitud = 2,
-                identificacion = "0987654321",
-                IdCliente = 2,
-                MontoSolicitado = 15000,
-                comentarios = "Crédito para remodelar mi casa.",
-                FechaSolicitud = DateTime.Now.AddDays(-5),
-                Estado = "Pendiente"
-            }
-        };
+            _context = context;
+        }
 
         public async Task<bool> AgregarSolicitudAsync(SolicitudCredito solicitudcredito)
         {
-            solicitudcredito.IdSolicitud = solicitudes.Any() ? solicitudes.Max(s => s.IdSolicitud) + 1 : 1;
-            return true;
+            if (solicitudcredito == null)
+                return false;
+
+            // Establecer fecha si no viene
+            if (solicitudcredito.FechaSolicitud == default)
+                solicitudcredito.FechaSolicitud = DateTime.UtcNow;
+
+            await _context.SolicitudesCredito.AddAsync(solicitudcredito);
+            var cambios = await _context.SaveChangesAsync();
+
+            return cambios > 0;
         }
+
 
         public async Task<SolicitudCredito> ObtenerPorIdentificacionAsync(string identificacion)
         {
-            var solicitud = solicitudes.FirstOrDefault(s => s.identificacion == identificacion);
-            return solicitud;
+            if (string.IsNullOrWhiteSpace(identificacion)) return null;
+            return await _context.SolicitudesCredito.FirstOrDefaultAsync(s => s.identificacion == identificacion);
         }
+
+        public async Task<SolicitudCredito?> ObtenerActivaPorIdentificacionAsync(string identificacion)
+        {
+            if (string.IsNullOrWhiteSpace(identificacion)) return null;
+
+            return await _context.SolicitudesCredito
+                .FirstOrDefaultAsync(s =>
+                    s.identificacion == identificacion &&
+                    (s.Estado == "Registrado" || s.Estado == "Devolución"));
+        }
+
 
         public async Task<List<SolicitudCredito>> ObtenerSolicitudesAsync()
         {
-            // Devolver una copia de la lista internamente almacenada para no exponer la referencia directa
-            return await Task.FromResult(solicitudes.ToList());
+            return await _context.SolicitudesCredito.AsNoTracking().ToListAsync();
+        }
+
+        public async Task<SolicitudCredito?> ObtenerPorIdAsync(int id)
+        {
+            return await _context.SolicitudesCredito.FirstOrDefaultAsync(s => s.IdSolicitud == id);
+        }
+
+        public async Task<bool> ActualizarSolicitudAsync(SolicitudCredito solicitudcredito)
+        {
+            var existente = await _context.SolicitudesCredito.FirstOrDefaultAsync(s => s.IdSolicitud == solicitudcredito.IdSolicitud);
+            if (existente == null) return false;
+
+            existente.identificacion = solicitudcredito.identificacion;
+            existente.IdCliente = solicitudcredito.IdCliente;
+            existente.MontoSolicitado = solicitudcredito.MontoSolicitado;
+            existente.comentarios = solicitudcredito.comentarios;
+            existente.Documento = solicitudcredito.Documento;
+            existente.FechaSolicitud = solicitudcredito.FechaSolicitud;
+            existente.Estado = solicitudcredito.Estado;
+
+            _context.SolicitudesCredito.Update(existente);
+            var cambios = await _context.SaveChangesAsync();
+            return cambios > 0;
+        }
+
+        public async Task<bool> EliminarSolicitudAsync(int id)
+        {
+            var existente = await _context.SolicitudesCredito.FirstOrDefaultAsync(s => s.IdSolicitud == id);
+            if (existente == null) return false;
+
+            _context.SolicitudesCredito.Remove(existente);
+            var cambios = await _context.SaveChangesAsync();
+            return cambios > 0;
         }
     }
 }

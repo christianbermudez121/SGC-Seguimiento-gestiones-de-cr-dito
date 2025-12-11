@@ -14,5 +14,11 @@ namespace ProyectoSGCBLL.Services
         Task<CustomResponse<SolicitudCreditoDto>> ObtenerSolicitudesCreditoPorIdentificacion(string identificacion);
 
         Task<CustomResponse<List<SolicitudCreditoDto>>> ObtenerSolicitudesCredito();
+
+        Task<CustomResponse<SolicitudCreditoDto>> ObtenerSolicitudPorId(int id);
+
+        Task<CustomResponse<SolicitudCreditoDto>> EditarSolicitud(SolicitudCreditoDto solicitud);
+
+        Task<CustomResponse<bool>> EliminarSolicitud(int id);
     }
 }

@@ -84,5 +84,66 @@ namespace SGC_Seguimiento_gestiones_de_crédito.Controllers
 
             return RedirectToAction(nameof(Index));
         }
+
+        // GET partial: /SolicitudCredito/EditPartial/{id}
+        [HttpGet]
+        public async Task<IActionResult> EditPartial(int id)
+        {
+            if (id <= 0)
+                return BadRequest();
+
+            var resp = await _solicitudService.ObtenerSolicitudPorId(id);
+            if (resp == null || resp.EsError || resp.Data == null)
+                return NotFound();
+
+            return PartialView("_EditSolicitudPartial", resp.Data);
+        }
+
+        // POST AJAX: /SolicitudCredito/EditAjax
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditAjax([FromForm] SolicitudCreditoDto solicitud)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(new { message = "Datos inválidos", errors = ModelState });
+
+            var resp = await _solicitudService.EditarSolicitud(solicitud);
+            if (resp == null)
+                return BadRequest(new { message = "Respuesta nula del servicio." });
+
+            if (resp.EsError)
+                return BadRequest(new { message = resp.Mensaje });
+
+            return Ok(new { message = "Solicitud actualizada", data = resp.Data });
+        }
+
+        // GET partial: /SolicitudCredito/DeletePartial/{id}
+        [HttpGet]
+        public async Task<IActionResult> DeletePartial(int id)
+        {
+            if (id <= 0)
+                return BadRequest();
+
+            var resp = await _solicitudService.ObtenerSolicitudPorId(id);
+            if (resp == null || resp.EsError || resp.Data == null)
+                return NotFound();
+
+            return PartialView("_DeleteSolicitudPartial", resp.Data);
+        }
+
+        // POST AJAX: /SolicitudCredito/DeleteAjax
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteAjax(int id)
+        {
+            var resp = await _solicitudService.EliminarSolicitud(id);
+            if (resp == null)
+                return BadRequest(new { message = "Respuesta nula del servicio." });
+
+            if (resp.EsError)
+                return BadRequest(new { message = resp.Mensaje });
+
+            return Ok(new { message = "Solicitud eliminada" });
+        }
     }
 }

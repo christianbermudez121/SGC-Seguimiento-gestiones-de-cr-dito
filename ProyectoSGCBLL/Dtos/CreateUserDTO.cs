@@ -1,10 +1,17 @@
+ï»¿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace SGC_Seguimiento_gestiones_de_crédito.Models
+namespace ProyectoSGCBLL.Dtos
 {
-    public class CreateUserViewModel
+    public class CreateUserDTO
     {
+         
+
+
         [Required]
         [EmailAddress]
         public string Email { get; set; } = string.Empty;
@@ -18,6 +25,6 @@ namespace SGC_Seguimiento_gestiones_de_crédito.Models
         public string ConfirmPassword { get; set; } = string.Empty;
 
         public string? SelectedRole { get; set; }
-        public List<string> AvailableRoles { get; set; } = new List<string>();
+        public IList<string> Roles { get; set; } = new List<string>();
     }
 }

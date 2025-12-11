@@ -1,8 +1,12 @@
+ï»¿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace SGC_Seguimiento_gestiones_de_crédito.Models
+namespace ProyectoSGCBLL.Dtos
 {
-    public class UserViewModel
+    public class UserDto
     {
         public string Id { get; set; } = string.Empty;
         public string? Email { get; set; }

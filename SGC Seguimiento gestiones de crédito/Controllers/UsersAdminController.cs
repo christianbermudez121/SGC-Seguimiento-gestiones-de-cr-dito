@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using ProyectoSGCBLL.Dtos;
 using ProyectoSGCDAL.Entities;
-using SGC_Seguimiento_gestiones_de_crédito.Models;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -25,12 +25,12 @@ namespace SGC_Seguimiento_gestiones_de_crédito.Controllers
         public async Task<IActionResult> Index()
         {
             var users = _userManager.Users.ToList();
-            var model = new List<UserViewModel>();
+            var model = new List<UserDto>();
 
             foreach (var u in users)
             {
                 var roles = await _userManager.GetRolesAsync(u);
-                model.Add(new UserViewModel
+                model.Add(new UserDto
                 {
                     Id = u.Id,
                     Email = u.Email,
@@ -46,18 +46,18 @@ namespace SGC_Seguimiento_gestiones_de_crédito.Controllers
         public IActionResult Create()
         {
             var roles = _roleManager.Roles.Select(r => r.Name).ToList();
-            var model = new CreateUserViewModel { AvailableRoles = roles };
+            var model = new CreateUserDTO { Roles = roles };
             return View(model);
         }
 
         // POST: /UsersAdmin/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(CreateUserViewModel model)
+        public async Task<IActionResult> Create(CreateUserDTO model)
         {
             if (!ModelState.IsValid)
             {
-                model.AvailableRoles = _roleManager.Roles.Select(r => r.Name).ToList();
+                model.Roles = _roleManager.Roles.Select(r => r.Name).ToList();
                 return View(model);
             }
 
@@ -74,7 +74,7 @@ namespace SGC_Seguimiento_gestiones_de_crédito.Controllers
                 foreach (var er in result.Errors)
                     ModelState.AddModelError(string.Empty, er.Description);
 
-                model.AvailableRoles = _roleManager.Roles.Select(r => r.Name).ToList();
+                model.Roles = _roleManager.Roles.Select(r => r.Name).ToList();
                 TempData["Error"] = "No se pudo crear el usuario. Verifique los errores listados.";
 
                 return View(model);
@@ -99,7 +99,7 @@ namespace SGC_Seguimiento_gestiones_de_crédito.Controllers
                 return NotFound();
 
             var roles = await _userManager.GetRolesAsync(user);
-            var model = new UserViewModel
+            var model = new UserDto
             {
                 Id = user.Id,
                 Email = user.Email,

@@ -1,4 +1,4 @@
-@model SGC_Seguimiento_gestiones_de_crédito.Models.CreateUserViewModel
+@model ProyectoSGCBLL.Dtos.CreateUserDTO
 
 @{
     ViewData["Title"] = "Crear usuario";
@@ -15,6 +15,9 @@
 <div asp-validation-summary="All" class="alert alert-danger" role="alert" style="display:@(ViewData.ModelState.IsValid ? "none" : "block")"></div>
 
 <form method="post" asp-action="Create">
+
+
+
     <div class="mb-3">
         <label asp-for="Email" class="form-label"></label>
         <input asp-for="Email" class="form-control" />
@@ -37,7 +40,7 @@
         <label class="form-label">Rol</label>
         <select asp-for="SelectedRole" class="form-select">
             <option value="">-- Ninguno --</option>
-            @foreach (var r in Model.AvailableRoles)
+            @foreach (var r in Model.Roles)
             {
                 <option value="@r">@r</option>
             }

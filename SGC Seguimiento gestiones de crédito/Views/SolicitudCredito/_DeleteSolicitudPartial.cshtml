@@ -1,0 +1,19 @@
+@model ProyectoSGCBLL.Dtos.SolicitudCreditoDto
+
+<div class="modal-header">
+    <h5 class="modal-title text-danger">Eliminar Solicitud</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+</div>
+
+<div class="modal-body">
+    <p>¿Desea eliminar la solicitud de crédito <strong>@Model.Identificacion</strong> (Id: @Model.Id)?</p>
+</div>
+
+<div class="modal-footer">
+    <form asp-action="DeleteAjax" asp-controller="SolicitudCredito" method="post" class="js-ajax-form">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="id" value="@Model.Id" />
+        <button class="btn btn-danger" type="submit">Eliminar</button>
+        <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Cancelar</button>
+    </form>
+</div>

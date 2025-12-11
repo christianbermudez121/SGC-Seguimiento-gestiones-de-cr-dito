@@ -15,6 +15,13 @@
 
 <div id="alertPlaceholder"></div>
 
+<!-- Modal host (Bootstrap) -->
+<div class="modal fade" id="app-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content"><!-- contenido cargado por AJAX --></div>
+    </div>
+</div>
+
 <table class="table table-striped" id="solicitudesTable">
     <thead>
         <tr>
@@ -23,6 +30,7 @@
             <th>Monto</th>
             <th>Comentarios</th>
             <th>Documento</th>
+            <th style="width:220px;">Acciones</th>
         </tr>
     </thead>
     <tbody>
@@ -36,6 +44,13 @@
                 <td>@s.MontoSolicitado</td>
                 <td>@s.Comentarios</td>
                 <td>@s.Documento</td>
+                <td class="text-nowrap">
+                    <button class="btn btn-sm btn-outline-secondary js-open-modal"
+                            data-url="@Url.Action("EditPartial", "SolicitudCredito", new { id = s.Id })">Editar</button>
+
+                    <button class="btn btn-sm btn-danger js-open-modal ms-1"
+                            data-url="@Url.Action("DeletePartial", "SolicitudCredito", new { id = s.Id })">Eliminar</button>
+                </td>
             </tr>
         }
     }
@@ -44,8 +59,24 @@
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <link href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" rel="stylesheet" />
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
 
     <script>
+        // Inicializar DataTable
+        const table = $('#solicitudesTable').DataTable({
+            responsive: true,
+            pageLength: 10,
+            columnDefs: [
+                { orderable: false, targets: -1 }
+            ],
+            language: {
+                url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
+            }
+        });
+
         const createPartialUrl = '@Url.Action("CreatePartial","SolicitudCredito")';
         const createAjaxUrl = '@Url.Action("CreateAjax","SolicitudCredito")';
 
@@ -99,18 +130,106 @@
             const result = await fetchResp.json();
             Swal.fire('Ok', result.message || 'Creado', 'success');
 
-            // Actualizar tabla sin recargar: insertar nueva fila al inicio
+            // Actualizar tabla sin recargar: insertar nueva fila con DataTables
             const data = result.data;
             if (data) {
-                const tbody = document.querySelector('#solicitudesTable tbody');
-                const tr = document.createElement('tr');
-                tr.setAttribute('data-id', data.id || '');
-                tr.innerHTML = `<td>${data.id ?? ''}</td>
-                                <td>${data.identificacion ?? ''}</td>
-                                <td>${data.montoSolicitado ?? ''}</td>
-                                <td>${data.comentarios ?? ''}</td>
-                                <td>${data.documento ?? ''}</td>`;
-                if (tbody) tbody.prepend(tr);
+                const actionHtml = `\n                    <button class="btn btn-sm btn-outline-secondary js-open-modal" data-url="/SolicitudCredito/EditPartial/${data.id}">Editar</button>\n                    <button class="btn btn-sm btn-danger js-open-modal ms-1" data-url="/SolicitudCredito/DeletePartial/${data.id}">Eliminar</button>\n                `;
+
+                table.row.add([
+                    data.id ?? '',
+                    data.identificacion ?? '',
+                    data.montoSolicitado ?? '',
+                    data.comentarios ?? '',
+                    data.documento ?? '',
+                    actionHtml
+                ]).draw(false);
+            }
+        });
+
+        // Manejo de apertura de modales para Edit/Delete (delegado)
+        document.addEventListener('click', async (e) => {
+            const btn = e.target.closest('.js-open-modal');
+            if (!btn) return;
+            e.preventDefault();
+
+            const url = btn.getAttribute('data-url');
+            if (!url) return;
+
+            // Cargar contenido parcial
+            const resp = await fetch(url);
+            if (!resp.ok) {
+                Swal.fire('Error', 'No se pudo cargar el contenido', 'error');
+                return;
+            }
+
+            const html = await resp.text();
+            const modalEl = document.getElementById('app-modal');
+            const modalContent = modalEl.querySelector('.modal-content');
+            modalContent.innerHTML = html;
+
+            // Mostrar modal Bootstrap
+            const modal = new bootstrap.Modal(modalEl);
+            modal.show();
+
+            // Delegar envío AJAX del formulario dentro del modal
+            const form = modalContent.querySelector('.js-ajax-form');
+            if (form) {
+                form.addEventListener('submit', async (ev) => {
+                    ev.preventDefault();
+                    const fd = new FormData(form);
+                    const token = fd.get('__RequestVerificationToken');
+                    const headers = token ? { 'RequestVerificationToken': token } : {};
+                    const action = form.action;
+
+                    const r = await fetch(action, {
+                        method: 'POST',
+                        headers: headers,
+                        body: fd
+                    });
+
+                    if (!r.ok) {
+                        const err = await r.json().catch(() => ({ message: 'Error' }));
+                        Swal.fire('Error', err.message || 'Error en operación', 'error');
+                        return;
+                    }
+
+                    const result = await r.json();
+
+                    // Si es edición, actualizar fila con DataTables
+                    if (form.action && form.action.toLowerCase().includes('edit')) {
+                        const data = result.data;
+                        if (data) {
+                            // encontrar la fila por atributo data-id
+                            const tr = document.querySelector(`#solicitudesTable tr[data-id='${data.id}']`);
+                            if (tr) {
+                                // actualizar atributos y datos en DataTable
+                                tr.setAttribute('data-id', data.id);
+                                table.row(tr).data([
+                                    data.id ?? '',
+                                    data.identificacion ?? '',
+                                    data.montoSolicitado ?? '',
+                                    data.comentarios ?? '',
+                                    data.documento ?? '',
+                                    `\n                                        <button class="btn btn-sm btn-outline-secondary js-open-modal" data-url="/SolicitudCredito/EditPartial/${data.id}">Editar</button>\n                                        <button class="btn btn-sm btn-danger js-open-modal ms-1" data-url="/SolicitudCredito/DeletePartial/${data.id}">Eliminar</button>\n                                    `
+                                ]).draw(false);
+                            }
+                        }
+                        Swal.fire('Ok', result.message || 'Actualizado', 'success');
+                    }
+
+                    // Si es eliminación, remover fila con DataTables
+                    if (form.action && form.action.toLowerCase().includes('delete')) {
+                        const idInput = form.querySelector('input[name="id"]');
+                        const id = idInput ? idInput.value : null;
+                        if (id) {
+                            const tr = document.querySelector(`#solicitudesTable tr[data-id='${id}']`);
+                            if (tr) table.row(tr).remove().draw(false);
+                        }
+                        Swal.fire('Ok', result.message || 'Eliminado', 'success');
+                    }
+
+                    modal.hide();
+                }, { once: true });
             }
         });
     </script>
