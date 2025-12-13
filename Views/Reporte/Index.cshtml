@@ -1,0 +1,46 @@
+@{
+    ViewData["Title"] = "Reporte de gestiones";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<div class="row mb-3">
+    <div class="col-md-4">
+        <input id="txtSolicitudId" class="form-control" placeholder="Número de gestión (Id solicitud)"/>
+    </div>
+    <div class="col-md-2">
+        <button id="btnBuscar" class="btn btn-primary">Buscar</button>
+    </div>
+</div>
+
+<table id="tblReporte" class="table table-striped">
+    <thead>
+        <tr><th>Fecha</th><th>Solicitud</th><th>Acción</th><th>Usuario</th><th>Comentario</th></tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+@section Scripts {
+    <script>
+        $(function () {
+            var table = $('#tblReporte').DataTable({
+                columns: [
+                    { data: 'fecha', render: function (d) { return new Date(d).toLocaleString(); } },
+                    { data: 'idSolicitud' },
+                    { data: 'accion' },
+                    { data: 'usuarioId' },
+                    { data: 'comentarios' }
+                ]
+            });
+
+            $('#btnBuscar').on('click', function () {
+                var id = $('#txtSolicitudId').val();
+                $.get('/Reporte/BuscarPorSolicitud', { solicitudId: id })
+                    .done(function (resp) {
+                        table.clear().rows.add(resp.data).draw();
+                    })
+                    .fail(function () { Swal.fire('Error', 'No se pudo obtener reporte', 'error'); });
+            });
+        });
+    </script>
+}

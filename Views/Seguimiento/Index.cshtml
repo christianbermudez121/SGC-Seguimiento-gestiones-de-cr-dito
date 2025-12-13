@@ -1,0 +1,88 @@
+@model IEnumerable<ProyectoSGCBLL.Dtos.SolicitudCreditoDto>
+
+@{
+    ViewData["Title"] = "Seguimiento de gestiones";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<table id="tblSolicitudes" class="table table-striped">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Identificación</th>
+            <th>Monto</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var s in Model)
+    {
+        <tr>
+            <td>@s.Id</td>
+            <td>@s.Identificacion</td>
+            <td>@s.MontoSolicitado</td>
+            <td>@s.Estado</td>
+            <td>
+                <button class="btn btn-sm btn-info btn-historial" data-id="@s.Id">Historial</button>
+                @if (User.IsInRole("Analista"))
+                {
+                    <button class="btn btn-sm btn-primary btn-cambiar" data-id="@s.Id" data-estado="Enviado aprobación">Enviar aprobación</button>
+                }
+                @if (User.IsInRole("Gestor"))
+                {
+                    <button class="btn btn-sm btn-success btn-cambiar" data-id="@s.Id" data-estado="Aprobado">Aprobar</button>
+                    <button class="btn btn-sm btn-warning btn-cambiar" data-id="@s.Id" data-estado="Devolución">Devolver</button>
+                }
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+<div id="modalContainer"></div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            $('#tblSolicitudes').DataTable();
+
+            $(document).on('click', '.btn-historial', function () {
+                var id = $(this).data('id');
+                $.get('/Seguimiento/HistorialPartial', { solicitudId: id })
+                    .done(function (html) {
+                        $('#modalContainer').html(html);
+                        var modal = new bootstrap.Modal(document.getElementById('historialModal'));
+                        modal.show();
+                    });
+            });
+
+            $(document).on('click', '.btn-cambiar', function () {
+                var id = $(this).data('id');
+                var nuevo = $(this).data('estado');
+                Swal.fire({
+                    title: 'Confirmar',
+                    text: 'Cambiar estado a: ' + nuevo,
+                    icon: 'question',
+                    input: 'text',
+                    inputPlaceholder: 'Comentario (opcional)',
+                    showCancelButton: true
+                }).then(function (res) {
+                    if (!res.isConfirmed) return;
+                    var token = $('input[name="__RequestVerificationToken"]').first().val();
+                    $.post('/Seguimiento/CambiarEstadoAjax', {
+                        solicitudId: id,
+                        nuevoEstado: nuevo,
+                        comentario: res.value,
+                        __RequestVerificationToken: token
+                    }).done(function () {
+                        Swal.fire('Listo', 'Estado actualizado', 'success').then(() => location.reload());
+                    }).fail(function (xhr) {
+                        Swal.fire('Error', xhr.responseJSON?.message || 'Error', 'error');
+                    });
+                });
+            });
+        });
+    </script>
+}

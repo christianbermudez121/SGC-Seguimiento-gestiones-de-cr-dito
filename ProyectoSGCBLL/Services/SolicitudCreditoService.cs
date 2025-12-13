@@ -4,8 +4,6 @@ using ProyectoSGCDAL.Entities;
 using ProyectoSGCDAL.Repositories;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace ProyectoSGCBLL.Services
@@ -14,19 +12,21 @@ namespace ProyectoSGCBLL.Services
     {
         private readonly ISolicitudCreditoRepository _solicitudesrepository;
         private readonly IMapper _mapper;
-        public SolicitudCreditoService(ISolicitudCreditoRepository solicitudesrepository, IMapper mapper)
+        private readonly IHistorialGestionService _historialService;
+
+        public SolicitudCreditoService(ISolicitudCreditoRepository solicitudesrepository, IMapper mapper, IHistorialGestionService historialService)
         {
             _solicitudesrepository = solicitudesrepository;
             _mapper = mapper;
+            _historialService = historialService;
         }
+
         public async Task<CustomResponse<SolicitudCreditoDto>> AgregarSolicitudCredito(SolicitudCreditoDto dto)
         {
             var respuesta = new CustomResponse<SolicitudCreditoDto>();
 
-         
             var existente = await _solicitudesrepository.ObtenerActivaPorIdentificacionAsync(dto.Identificacion);
 
-            //Validacion de monto maximo
             if (dto.MontoSolicitado > 10000000)
             {
                 respuesta.EsError = true;
@@ -34,17 +34,14 @@ namespace ProyectoSGCBLL.Services
                 return respuesta;
             }
 
-            //Validacion de solicitud ya existente para la misma identificacion
             if (existente != null)
             {
                 respuesta.EsError = true;
                 respuesta.Mensaje =
                     $"El usuario con identificación {dto.Identificacion} ya cuenta con la solicitud de crédito {existente.IdSolicitud}, por favor resolver la gestión antes de ingresar otra nueva";
-
-                return respuesta; // Detener proceso
+                return respuesta;
             }
 
-            // SI NO EXISTE, crear
             var entidad = _mapper.Map<SolicitudCredito>(dto);
 
             var creado = await _solicitudesrepository.AgregarSolicitudAsync(entidad);
@@ -55,12 +52,21 @@ namespace ProyectoSGCBLL.Services
                 return respuesta;
             }
 
-            // Retornar DTO creado
+            var historial = new HistorialGestion
+            {
+                IdSolicitud = entidad.IdSolicitud,
+                Accion = "Ingresado",
+                Comentarios = "Solicitud creada",
+                UsuarioId = dto.UsuarioId ?? string.Empty,
+                Fecha = DateTime.UtcNow
+            };
+
+            await _historialService.AgregarAsync(historial);
+
             dto.Id = entidad.IdSolicitud;
             respuesta.Data = dto;
             return respuesta;
         }
-
 
         public async Task<CustomResponse<List<SolicitudCreditoDto>>> ObtenerSolicitudesCredito()
         {
@@ -73,15 +79,17 @@ namespace ProyectoSGCBLL.Services
         public async Task<CustomResponse<SolicitudCreditoDto>> ObtenerSolicitudesCreditoPorIdentificacion(string identificacion)
         {
             var respuesta = new CustomResponse<SolicitudCreditoDto>();
-
-            var solicitudes = await _solicitudesrepository.ObtenerPorIdentificacionAsync(identificacion);
-
-            respuesta.Data = _mapper.Map<SolicitudCreditoDto>(solicitudes);
+            var entidad = await _solicitudesrepository.ObtenerPorIdentificacionAsync(identificacion);
+            if (entidad == null)
+            {
+                respuesta.EsError = true;
+                respuesta.Mensaje = "Solicitud no encontrada";
+                return respuesta;
+            }
+            respuesta.Data = _mapper.Map<SolicitudCreditoDto>(entidad);
             return respuesta;
         }
 
-
-        // nuevos métodos
         public async Task<CustomResponse<SolicitudCreditoDto>> ObtenerSolicitudPorId(int id)
         {
             var respuesta = new CustomResponse<SolicitudCreditoDto>();
@@ -108,7 +116,6 @@ namespace ProyectoSGCBLL.Services
                 return respuesta;
             }
 
-            // mapear dto a entidad
             var entidad = _mapper.Map<SolicitudCredito>(solicitud);
             entidad.IdSolicitud = solicitud.Id;
 
@@ -119,6 +126,17 @@ namespace ProyectoSGCBLL.Services
                 respuesta.Mensaje = "No se pudo actualizar la solicitud";
                 return respuesta;
             }
+
+            var historial = new HistorialGestion
+            {
+                IdSolicitud = entidad.IdSolicitud,
+                Accion = $"Estado: {entidad.Estado}",
+                Comentarios = solicitud.Comentarios ?? string.Empty,
+                UsuarioId = solicitud.UsuarioId ?? string.Empty,
+                Fecha = DateTime.UtcNow
+            };
+
+            await _historialService.AgregarAsync(historial);
 
             respuesta.Data = _mapper.Map<SolicitudCreditoDto>(entidad);
             return respuesta;
@@ -142,6 +160,17 @@ namespace ProyectoSGCBLL.Services
                 respuesta.Mensaje = "No se pudo eliminar la solicitud";
                 return respuesta;
             }
+
+            var historial = new HistorialGestion
+            {
+                IdSolicitud = id,
+                Accion = "Eliminado",
+                Comentarios = "Solicitud eliminada",
+                UsuarioId = string.Empty,
+                Fecha = DateTime.UtcNow
+            };
+
+            await _historialService.AgregarAsync(historial);
 
             respuesta.Data = true;
             return respuesta;

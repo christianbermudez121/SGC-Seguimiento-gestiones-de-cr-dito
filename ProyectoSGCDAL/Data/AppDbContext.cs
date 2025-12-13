@@ -8,6 +8,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
 
     public DbSet<Cliente> Clientes => Set<Cliente>();
     public DbSet<SolicitudCredito> SolicitudesCredito => Set<SolicitudCredito>();
+    public DbSet<HistorialGestion> HistorialGestiones => Set<HistorialGestion>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -26,7 +27,6 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
             e.HasIndex(x => x.Identificacion).IsUnique();
         });
 
-        // OPCIONAL: Si quieres configurar la tabla de SolicitudCredito
         modelBuilder.Entity<SolicitudCredito>(e =>
         {
             e.ToTable("SolicitudesCredito");
@@ -41,6 +41,24 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
 
             e.Property(x => x.Estado)
                 .HasMaxLength(20);
+        });
+
+        modelBuilder.Entity<HistorialGestion>(e =>
+        {
+            e.ToTable("HistorialGestiones");
+            e.HasKey(x => x.Id);
+
+            e.Property(x => x.Fecha).IsRequired();
+            e.Property(x => x.UsuarioId).HasMaxLength(450);
+            e.Property(x => x.Accion).HasMaxLength(50).IsRequired();
+            e.Property(x => x.Comentarios).HasMaxLength(500);
+
+            e.HasOne(h => h.SolicitudCredito)
+             .WithMany()
+             .HasForeignKey(h => h.IdSolicitud)
+             .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasIndex(h => h.IdSolicitud);
         });
     }
 }

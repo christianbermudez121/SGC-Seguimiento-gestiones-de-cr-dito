@@ -1,0 +1,33 @@
+@model IEnumerable<ProyectoSGCDAL.Entities.HistorialGestion>
+
+<div class="modal fade" id="historialModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Historial de gestión</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <table class="table table-sm">
+            <thead>
+                <tr><th>Fecha</th><th>Acción</th><th>Usuario</th><th>Comentario</th></tr>
+            </thead>
+            <tbody>
+            @foreach(var h in Model)
+            {
+                <tr>
+                    <td>@h.Fecha.ToLocalTime().ToString("g")</td>
+                    <td>@h.Accion</td>
+                    <td>@h.UsuarioId</td>
+                    <td>@h.Comentarios</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
