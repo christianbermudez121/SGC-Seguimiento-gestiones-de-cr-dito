@@ -18,6 +18,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<ISolicitudCreditoService, SolicitudCreditoService>();
 builder.Services.AddScoped<ISolicitudCreditoRepository, SolicitudCreditoRepository>();
 
+builder.Services.AddScoped<IHistorialGestionService, HistorialGestionService>();
+
 // Register historial repository + service (required by SolicitudCreditoService)
 builder.Services.AddScoped<IHistorialGestionRepository, HistorialGestionRepository>();
 builder.Services.AddScoped<IHistorialGestionService, HistorialGestionService>();

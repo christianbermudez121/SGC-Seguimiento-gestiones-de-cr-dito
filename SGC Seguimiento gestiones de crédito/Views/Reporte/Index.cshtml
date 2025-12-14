@@ -1,0 +1,28 @@
+﻿<table id="tablaReporte" class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Fecha</th>
+            <th>Usuario</th>
+            <th>Estado Anterior</th>
+            <th>Estado Nuevo</th>
+            <th>Comentarios</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var h in Model)
+        {
+            <tr>
+                <td>@h.Fecha</td>
+                <td>@h.Usuario.UserName</td>
+                <td>@h.EstadoAnterior</td>
+                <td>@h.EstadoNuevo</td>
+                <td>@h.Comentarios</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+<script>
+    $('#tablaReporte').DataTable();
+</script>

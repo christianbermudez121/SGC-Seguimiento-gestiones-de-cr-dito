@@ -1,0 +1,36 @@
+﻿<table id="tablaSeguimiento" class="table table-striped">
+    <thead>
+        <tr>
+            <th>N° Gestión</th>
+            <th>Cliente</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Id</td>
+                <td>@item.Cliente.Nombre</td>
+                <td>@item.Estado</td>
+                <td>
+                    <button class="btn btn-primary" onclick="abrirModal(@item.Id)">Cambiar estado</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+<script>
+    $('#tablaSeguimiento').DataTable();
+
+
+    function abrirModal(id) {
+    $.get('/Seguimiento/ChangeEstadoPartial/' + id, function (data) {
+    $('#modalBody').html(data);
+    $('#estadoModal').modal('show');
+    });
+    }
+</script>

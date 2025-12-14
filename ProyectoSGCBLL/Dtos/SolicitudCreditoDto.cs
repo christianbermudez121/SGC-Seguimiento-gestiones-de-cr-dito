@@ -13,5 +13,6 @@ namespace ProyectoSGCBLL.Dtos
 
         // opcional: id del usuario que realiza la acción (para tracking)
         public string? UsuarioId { get; set; }
+
     }
 }

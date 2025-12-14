@@ -14,9 +14,9 @@ namespace ProyectoSGCBLL.Services
             _repo = repo;
         }
 
-        public async Task<bool> AgregarAsync(HistorialGestion entidad)
+        public async Task AgregarAsync(HistorialGestion entidad)
         {
-            return await _repo.AgregarAsync(entidad);
+            await _repo.AgregarAsync(entidad);
         }
 
         public async Task<List<HistorialGestion>> ObtenerPorSolicitudAsync(int idSolicitud)

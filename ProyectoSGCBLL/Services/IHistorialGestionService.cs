@@ -6,7 +6,7 @@ namespace ProyectoSGCBLL.Services
 {
     public interface IHistorialGestionService
     {
-        Task<bool> AgregarAsync(HistorialGestion entidad);
+        Task AgregarAsync(HistorialGestion entidad);
         Task<List<HistorialGestion>> ObtenerPorSolicitudAsync(int idSolicitud);
     }
 }

@@ -1,0 +1,32 @@
+﻿<form id="formEstado">
+    <input type="hidden" name="id" value="@Model.Id" />
+
+
+    <select name="nuevoEstado" class="form-control">
+        @if (User.IsInRole("Analista") && Model.Estado == "Ingresado")
+        {
+            <option value="Enviado aprobación">Enviar aprobación</option>
+        }
+        @if (User.IsInRole("Gestor") && Model.Estado == "Enviado aprobación")
+        {
+            <option value="Aprobado">Aprobar</option>
+            <option value="Devolución">Devolver</option>
+        }
+    </select>
+
+
+<textarea name="comentarios" class="form-control"></textarea>
+
+
+    <button type="submit" class="btn btn-success">Guardar</button>
+</form>
+
+
+<script>
+    $('#formEstado').submit(function (e) {
+    e.preventDefault();
+    $.post('/Seguimiento/ChangeEstado', $(this).serialize(), function () {
+    Swal.fire('Éxito', 'Estado actualizado', 'success').then(() => location.reload());
+    });
+    });
+</script>

@@ -3,80 +3,82 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using ProyectoSGCBLL.Dtos;
 using ProyectoSGCBLL.Services;
-using ProyectoSGCDAL.Entities;
+using System.Threading.Tasks;
 
 namespace SGC_Seguimiento_gestiones_de_credito.Controllers
 {
-    [Authorize(Roles = "Analista,Gestor")]
+    [Authorize(Roles = "Analista,Gestor,Administrador")]
     public class SeguimientoController : Controller
     {
         private readonly ISolicitudCreditoService _solicitudService;
         private readonly IHistorialGestionService _historialService;
         private readonly UserManager<ApplicationUser> _userManager;
 
-        public SeguimientoController(ISolicitudCreditoService solicitudService,
-                                     IHistorialGestionService historialService,
-                                     UserManager<ApplicationUser> userManager)
+        public SeguimientoController(
+            ISolicitudCreditoService solicitudService,
+            IHistorialGestionService historialService,
+            UserManager<ApplicationUser> userManager)
         {
             _solicitudService = solicitudService;
             _historialService = historialService;
             _userManager = userManager;
         }
 
+        // Lista principal (DataTable)
         public async Task<IActionResult> Index()
         {
             var resp = await _solicitudService.ObtenerSolicitudesCredito();
-            if (resp == null || resp.EsError) return View(new List<SolicitudCreditoDto>());
-            return View(resp.Data);
+            var model = resp.Data ?? new System.Collections.Generic.List<SolicitudCreditoDto>();
+            return View(model);
         }
 
+        // Partial para modal de cambio de estado
         [HttpGet]
-        public async Task<IActionResult> HistorialPartial(int solicitudId)
+        public async Task<IActionResult> ChangeEstadoPartial(int id)
         {
-            var lista = await _historialService.ObtenerPorSolicitudAsync(solicitudId);
-            return PartialView("_HistorialPartial", lista);
+            if (id <= 0) return BadRequest();
+
+            var resp = await _solicitudService.ObtenerSolicitudPorId(id);
+            if (resp == null || resp.EsError || resp.Data == null) return NotFound();
+
+            return PartialView("_ChangeEstadoPartial", resp.Data);
         }
 
+        // AJAX: cambiar estado (POST)
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CambiarEstadoAjax(int solicitudId, string nuevoEstado, string comentario)
+        public async Task<IActionResult> ChangeEstado(int id, string nuevoEstado, string comentarios)
         {
-            var sResp = await _solicitudService.ObtenerSolicitudPorId(solicitudId);
-            if (sResp == null || sResp.EsError || sResp.Data == null)
-                return BadRequest(new { message = "Solicitud no encontrada" });
+            if (id <= 0) return BadRequest(new { ok = false, msg = "Id inválido" });
 
-            var dto = sResp.Data;
+            var obtener = await _solicitudService.ObtenerSolicitudPorId(id);
+            if (obtener == null || obtener.EsError || obtener.Data == null)
+                return BadRequest(new { ok = false, msg = "Solicitud no encontrada" });
 
+            var dto = obtener.Data;
+            // Validar transiciones simples 
+            var actual = dto.Estado ?? "";
             if (User.IsInRole("Analista"))
             {
-                if (nuevoEstado != "Enviado aprobación") return Forbid();
+                if (!(actual == "Ingresado" && nuevoEstado == "Enviado aprobación"))
+                    return BadRequest(new { ok = false, msg = "Transición no permitida para Analista" });
             }
-            else if (User.IsInRole("Gestor"))
+            if (User.IsInRole("Gestor"))
             {
-                if (nuevoEstado != "Aprobado" && nuevoEstado != "Devolución") return Forbid();
-            }
-            else
-            {
-                return Forbid();
+                if (!(actual == "Enviado aprobación" && (nuevoEstado == "Aprobado" || nuevoEstado == "Devolución")))
+                    return BadRequest(new { ok = false, msg = "Transición no permitida para Gestor" });
             }
 
             dto.Estado = nuevoEstado;
-            dto.UsuarioId = _userManager.GetUserId(User);
+            dto.Comentarios = comentarios ?? string.Empty;
+            dto.UsuarioId = _userManager.GetUserId(User) ?? string.Empty;
 
-            var editResp = await _solicitudService.EditarSolicitud(dto);
-            if (editResp == null || editResp.EsError) return BadRequest(new { message = editResp?.Mensaje ?? "No se pudo actualizar" });
+            var editar = await _solicitudService.EditarSolicitud(dto);
+            if (editar == null || editar.EsError)
+                return BadRequest(new { ok = false, msg = editar?.Mensaje ?? "Error al actualizar estado" });
 
-            var h = new HistorialGestion
-            {
-                IdSolicitud = solicitudId,
-                Accion = nuevoEstado,
-                Comentarios = comentario ?? string.Empty,
-                UsuarioId = dto.UsuarioId ?? string.Empty,
-                Fecha = DateTime.UtcNow
-            };
-            await _historialService.AgregarAsync(h);
-
-            return Ok(new { message = "Estado actualizado" });
+            // EditarSolicitud ya registra historial; si necesita otro formato, agregar aquí.
+            return Ok(new { ok = true, msg = "Estado actualizado", data = editar.Data });
         }
     }
 }

@@ -16,5 +16,8 @@ namespace ProyectoSGCDAL.Entities
         public string Documento { get; set; } = string.Empty;
         public DateTime FechaSolicitud { get; set; } = DateTime.Now;
         public string Estado { get; set; } = "Registrado";
+
+        public ICollection<HistorialGestion> HistorialGestiones { get; set; }
+            = new List<HistorialGestion>();
     }
 }

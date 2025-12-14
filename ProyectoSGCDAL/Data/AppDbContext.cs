@@ -9,6 +9,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Cliente> Clientes => Set<Cliente>();
     public DbSet<SolicitudCredito> SolicitudesCredito => Set<SolicitudCredito>();
     public DbSet<HistorialGestion> HistorialGestiones => Set<HistorialGestion>();
+    
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -49,17 +50,19 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
             e.HasKey(x => x.Id);
 
             e.Property(x => x.Fecha).IsRequired();
-            e.Property(x => x.UsuarioId).HasMaxLength(450);
-            e.Property(x => x.Accion).HasMaxLength(50).IsRequired();
+            e.Property(x => x.UsuarioId).HasMaxLength(450).IsRequired();
+            e.Property(x => x.EstadoAnterior).HasMaxLength(50).IsRequired();
+            e.Property(x => x.EstadoNuevo).HasMaxLength(50).IsRequired();
             e.Property(x => x.Comentarios).HasMaxLength(500);
 
             e.HasOne(h => h.SolicitudCredito)
-             .WithMany()
+             .WithMany(s => s.HistorialGestiones)
              .HasForeignKey(h => h.IdSolicitud)
              .OnDelete(DeleteBehavior.Cascade);
 
             e.HasIndex(h => h.IdSolicitud);
         });
+
     }
 }
 
