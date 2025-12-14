@@ -1,32 +1,101 @@
-﻿<form id="formEstado">
-    <input type="hidden" name="id" value="@Model.Id" />
+﻿@model ProyectoSGCBLL.Dtos.SolicitudCreditoDto
 
+<div class="modal fade" id="estadoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
 
-    <select name="nuevoEstado" class="form-control">
-        @if (User.IsInRole("Analista") && Model.Estado == "Ingresado")
-        {
-            <option value="Enviado aprobación">Enviar aprobación</option>
-        }
-        @if (User.IsInRole("Gestor") && Model.Estado == "Enviado aprobación")
-        {
-            <option value="Aprobado">Aprobar</option>
-            <option value="Devolución">Devolver</option>
-        }
-    </select>
+            <div class="modal-header">
+                <h5 class="modal-title">Cambiar estado de la gestión</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
 
+            <div class="modal-body">
+                <form id="formEstado">
+                    @Html.AntiForgeryToken()
 
-<textarea name="comentarios" class="form-control"></textarea>
+                    <input type="hidden" name="id" value="@Model.Id" />
 
+                    <div class="mb-3">
+                        <label class="form-label">Estado actual</label>
+                        <input type="text"
+                               class="form-control"
+                               value="@Model.Estado"
+                               disabled />
+                    </div>
 
-    <button type="submit" class="btn btn-success">Guardar</button>
-</form>
+                    <div class="mb-3">
+                        <label class="form-label">Nuevo estado</label>
+                        <select name="nuevoEstado" class="form-select" required>
 
+                            @* ADMIN: siempre puede cambiar *@
+                            @if (User.IsInRole("Administrador"))
+                            {
+                                <option value="">-- Seleccione --</option>
+                                <option value="Ingresado">Ingresado</option>
+                                <option value="Enviado aprobación">Enviado aprobación</option>
+                                <option value="Aprobado">Aprobado</option>
+                                <option value="Devolución">Devolución</option>
+                            }
+                            @* ANALISTA *@
+                            else if (User.IsInRole("Analista") &&
+                            (Model.Estado == "Ingresado" || Model.Estado == "Registrado"))
+                            {
+                                <option value="Enviado aprobación">Enviar a aprobación</option>
+                            }
+                            @* GESTOR *@
+                            else if (User.IsInRole("Gestor") &&
+                            Model.Estado == "Enviado aprobación")
+                            {
+                                <option value="Aprobado">Aprobar</option>
+                                <option value="Devolución">Devolver</option>
+                            }
+
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Comentarios</label>
+                        <textarea name="comentarios"
+                                  class="form-control"
+                                  rows="3"
+                                  placeholder="Comentario (opcional)"></textarea>
+                    </div>
+
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-success">
+                            Guardar
+                        </button>
+                        <button type="button"
+                                class="btn btn-secondary"
+                                data-bs-dismiss="modal">
+                            Cancelar
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
 
 <script>
     $('#formEstado').submit(function (e) {
-    e.preventDefault();
-    $.post('/Seguimiento/ChangeEstado', $(this).serialize(), function () {
-    Swal.fire('Éxito', 'Estado actualizado', 'success').then(() => location.reload());
-    });
+        e.preventDefault();
+
+        $.post('/Seguimiento/ChangeEstado', $(this).serialize())
+            .done(function () {
+                Swal.fire(
+                    'Éxito',
+                    'El estado fue actualizado correctamente',
+                    'success'
+                ).then(() => location.reload());
+            })
+            .fail(function (xhr) {
+                Swal.fire(
+                    'Error',
+                    xhr.responseText || 'Error interno del servidor',
+                    'error'
+                );
+            });
     });
 </script>

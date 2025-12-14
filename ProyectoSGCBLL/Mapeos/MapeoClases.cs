@@ -19,7 +19,9 @@ namespace ProyectoSGCBLL.Mapeos
                 .ForMember(dest => dest.MontoSolicitado, opt => opt.MapFrom(src => src.MontoSolicitado))
                 .ForMember(dest => dest.Comentarios, opt => opt.MapFrom(src => src.comentarios))
                 .ForMember(dest => dest.Documento, opt => opt.MapFrom(src => src.Documento))
-                .ForMember(dest => dest.Estado, opt => opt.MapFrom(src => src.Estado));
+                .ForMember(dest => dest.Estado, opt => opt.MapFrom(src => src.Estado))
+                // Mapear nombre de cliente: si no hay navegación, usamos 'identificacion' como fallback.
+                .ForMember(dest => dest.ClienteNombre, opt => opt.MapFrom(src => src.identificacion));
 
             CreateMap<SolicitudCreditoDto, SolicitudCredito>()
                 .ForMember(dest => dest.IdSolicitud, opt => opt.MapFrom(src => src.Id))
