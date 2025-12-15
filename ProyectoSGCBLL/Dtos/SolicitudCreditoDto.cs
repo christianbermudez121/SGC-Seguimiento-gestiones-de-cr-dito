@@ -11,6 +11,8 @@ namespace ProyectoSGCBLL.Dtos
         public string Documento { get; set; } = string.Empty;
         public string Estado { get; set; } = string.Empty;
 
+        public int IdCliente { get; set; }
+
         // opcional: id del usuario que realiza la acción (para tracking)
         public string? UsuarioId { get; set; }
 

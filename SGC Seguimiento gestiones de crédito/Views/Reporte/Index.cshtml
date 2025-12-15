@@ -1,4 +1,29 @@
-﻿<table id="tablaReporte" class="table table-bordered">
+﻿@using System.Linq
+
+@{
+    // Solución: Preprocesar la lista de nombres en una variable fuertemente tipada para evitar CS1977
+    var nombresClientes = ((IEnumerable<dynamic>)Model)
+        .Select(h => h.Usuario != null ? (string)h.Usuario.UserName : null)
+        .Where(n => !string.IsNullOrEmpty(n))
+        .Distinct()
+        .OrderBy(n => n)
+        .ToList();
+}
+
+<h2>Reporte</h2>
+
+<div class="mb-3">
+    <label for="filterCliente" class="form-label">Filtrar por cliente (usuario)</label>
+    <input id="filterCliente" class="form-control" list="clientesList" placeholder="Escribe nombre de cliente..." />
+    <datalist id="clientesList">
+        @foreach (var nombre in nombresClientes)
+        {
+            <option value="@nombre"></option>
+        }
+    </datalist>
+</div>
+
+<table id="tablaReporte" class="table table-bordered table-striped">
     <thead>
         <tr>
             <th>Fecha</th>
@@ -12,8 +37,8 @@
         @foreach (var h in Model)
         {
             <tr>
-                <td>@h.Fecha</td>
-                <td>@h.Usuario.UserName</td>
+                <td>@(h.Fecha is DateTime dt ? dt.ToString("g") : (h.Fecha?.ToString() ?? ""))</td>
+                <td>@(h.Usuario?.UserName ?? "")</td>
                 <td>@h.EstadoAnterior</td>
                 <td>@h.EstadoNuevo</td>
                 <td>@h.Comentarios</td>
@@ -22,7 +47,47 @@
     </tbody>
 </table>
 
+<p id="noResultsMessage" class="text-muted" style="display:none">No se encontraron registros.</p>
 
 <script>
-    $('#tablaReporte').DataTable();
+    document.addEventListener('DOMContentLoaded', function () {
+        var input = document.getElementById('filterCliente');
+        var tabla = document.getElementById('tablaReporte');
+        var tbody = tabla.querySelector('tbody');
+        var noResults = document.getElementById('noResultsMessage');
+
+        function normalize(s) {
+            return (s || '').toString().trim().toLowerCase();
+        }
+
+        function filterRows() {
+            var query = normalize(input.value);
+            var rows = Array.from(tbody.rows);
+            var visible = 0;
+
+            rows.forEach(function (row) {
+                // Usuario está en la segunda columna (índice 1)
+                var usuarioCell = row.cells[1];
+                var usuarioText = usuarioCell ? normalize(usuarioCell.textContent) : '';
+                var match = query === '' || usuarioText.indexOf(query) !== -1;
+                row.style.display = match ? '' : 'none';
+                if (match) visible++;
+            });
+
+            noResults.style.display = visible === 0 ? '' : 'none';
+        }
+
+        input.addEventListener('input', filterRows);
+
+        // Si quieres limpiar el filtro con Esc:
+        input.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                input.value = '';
+                filterRows();
+            }
+        });
+
+        // Inicializa estado (por si hay valor en el input al cargar)
+        filterRows();
+    });
 </script>

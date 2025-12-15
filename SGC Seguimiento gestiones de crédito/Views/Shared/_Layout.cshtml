@@ -38,7 +38,7 @@
 
                     <ul class="navbar-nav flex-grow-1">
 
-                        @if (User.IsInRole("ServicioCliente"))
+                        @if (User.IsInRole("ServicioCliente") || User.IsInRole("Administrador"))
                         {
                             <li class="nav-item">
                                 <a class="nav-link @(ctrl == "SolicitudCredito" ? "active" : "")"
@@ -48,26 +48,27 @@
                             </li>
                         }
 
+                        @if (User.IsInRole("Gestor") || User.IsInRole("Analista") || User.IsInRole("Administrador"))
+                        {
                         <li class="nav-item">
                             <a class="nav-link @(ctrl == "Seguimiento" ? "active" : "")"
                                asp-controller="Seguimiento" asp-action="Index">
                                 Seguimiento
                             </a>
                         </li>
+                        }
+                        
 
-                        <li class="nav-item">
-                            <a class="nav-link @(ctrl == "Reporte" ? "active" : "")"
-                               asp-controller="Reporte" asp-action="Index">
-                                Reportes
-                            </a>
-                        </li>
+                            @if (User.Identity?.IsAuthenticated == true)
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link @(ctrl == "Clientes" ? "active" : "")"
+                                       asp-controller="Clientes" asp-action="Index">
+                                        Clientes
+                                    </a>
+                                </li>
+                            }
 
-                        <li class="nav-item">
-                            <a class="nav-link @(ctrl == "Clientes" ? "active" : "")"
-                               asp-controller="Clientes" asp-action="Index">
-                                Clientes
-                            </a>
-                        </li>
 
                         @if (User.IsInRole("Administrador"))
                         {
@@ -76,6 +77,13 @@
                                    asp-controller="UsersAdmin" asp-action="Index">
                                     Usuarios
                                 </a>
+                            </li>
+
+                                <li class="nav-item">
+                                    <a class="nav-link @(ctrl == "Reporte" ? "active" : "")"
+                                       asp-controller="Reporte" asp-action="Index">
+                                        Reportes
+                                    </a>
                             </li>
                         }
                     </ul>

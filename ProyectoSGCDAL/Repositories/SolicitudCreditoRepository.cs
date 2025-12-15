@@ -23,6 +23,26 @@ namespace ProyectoSGCDAL.Repositories
             if (solicitudcredito == null)
                 return false;
 
+            // Buscar y asignar IdCliente por la identificación proporcionada
+            if (string.IsNullOrWhiteSpace(solicitudcredito.identificacion))
+            {
+                // No hay identificación: no se puede asociar cliente -> fallo controlado
+                return false;
+            }
+
+            var cliente = await _context.Clientes
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.Identificacion == solicitudcredito.identificacion.Trim());
+
+            if (cliente == null)
+            {
+                // Cliente no encontrado: opción por defecto es fallar y permitir que la capa superior decida.
+                // Alternativa: crear automáticamente el cliente aquí si el flujo lo requiere.
+                return false;
+            }
+
+            solicitudcredito.IdCliente = cliente.Id;
+
             // Establecer fecha si no viene
             if (solicitudcredito.FechaSolicitud == default)
                 solicitudcredito.FechaSolicitud = DateTime.UtcNow;
@@ -32,7 +52,6 @@ namespace ProyectoSGCDAL.Repositories
 
             return cambios > 0;
         }
-
 
         public async Task<SolicitudCredito> ObtenerPorIdentificacionAsync(string identificacion)
         {

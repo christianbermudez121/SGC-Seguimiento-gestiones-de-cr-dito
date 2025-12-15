@@ -12,5 +12,8 @@
         public DateTime? FechaNacimiento { get; set; }
         public bool Activo { get; set; } = true;
         public DateTime FechaRegistro { get; set; } = DateTime.UtcNow;
-       }
+
+        public ICollection<SolicitudCredito> SolicitudesCredito { get; set; }
+        = new List<SolicitudCredito>();
+    }
 }

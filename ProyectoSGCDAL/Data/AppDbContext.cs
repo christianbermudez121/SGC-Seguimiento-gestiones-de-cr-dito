@@ -42,6 +42,14 @@ public class AppDbContext : IdentityDbContext<ApplicationUser>
 
             e.Property(x => x.Estado)
                 .HasMaxLength(20);
+
+            //  RELACIÓN CLIENTE → SOLICITUDES
+            e.HasOne(s => s.Cliente)
+             .WithMany(c => c.SolicitudesCredito)
+             .HasForeignKey(s => s.IdCliente)
+             .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasIndex(x => x.IdCliente);
         });
 
         modelBuilder.Entity<HistorialGestion>(e =>

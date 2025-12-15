@@ -11,6 +11,8 @@ namespace ProyectoSGCDAL.Entities
         public int IdSolicitud { get; set; }
         public string identificacion { get; set; } = string.Empty;
         public int IdCliente { get; set; }
+
+        public Cliente Cliente { get; set; } = null!; // navegación
         public decimal MontoSolicitado { get; set; }
         public string comentarios { get; set; } = string.Empty;
         public string Documento { get; set; } = string.Empty;
@@ -19,5 +21,7 @@ namespace ProyectoSGCDAL.Entities
 
         public ICollection<HistorialGestion> HistorialGestiones { get; set; }
             = new List<HistorialGestion>();
+
+
     }
 }
