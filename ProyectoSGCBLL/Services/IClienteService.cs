@@ -4,12 +4,11 @@ namespace ProyectoSGCBLL.Services
 {
     public interface IClienteService
     {
-        Task<List<Cliente>> ListarAsync(string? filtro = null, bool? soloActivos = null);
+        Task<List<Cliente>> ListarAsync(string? q, bool? activos);
         Task<Cliente?> ObtenerAsync(int id);
-        Task CrearAsync(Cliente c);
-        Task ActualizarAsync(Cliente c);
-        Task EliminarAsync(int id);   // físico
-        Task DesactivarAsync(int id); // lógico
-        Task<bool> IdentificacionDisponibleAsync(string identificacion, int? excluirId = null);
+        Task<(bool ok, string? error)> CrearAsync(Cliente cliente);
+        Task<(bool ok, string? error)> ActualizarAsync(Cliente cliente);
+        Task<(bool ok, string? error)> EliminarAsync(int id);
+        Task<(bool ok, string? error)> CambiarEstadoAsync(int id, bool activo);
     }
 }

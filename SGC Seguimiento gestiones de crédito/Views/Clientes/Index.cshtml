@@ -1,52 +1,11 @@
-﻿@model IEnumerable<ProyectoSGCDAL.Entities.Cliente>
+﻿@model List<ProyectoSGCDAL.Entities.Cliente>
 @{
-    ViewData["Title"] = "Clientes";
-    var filtro = ViewBag.Filtro as string;
+    ViewData["Title"] = "Administración de Clientes";
+    string q = ViewBag.Q as string;
     bool? activos = ViewBag.Activos as bool?;
 }
 
 <h2 class="mb-3">Administración de Clientes</h2>
-
-<div class="mb-3 d-flex gap-2 flex-wrap">
-    <form asp-action="Index" method="get" class="d-flex gap-2 flex-wrap">
-        <input name="q" value="@filtro" class="form-control" placeholder="Buscar por identificación/nombre/correo" />
-
-        @* >>> CORRECCIÓN RZ1031: No poner C# dentro de atributos. 
-           Renderizamos opciones con @if para decidir selected. *@
-        <select name="activos" class="form-control">
-            @if (activos == null)
-            {
-                <option value="" selected>Todos</option>
-            }
-            else
-            {
-                <option value="">Todos</option>
-            }
-            @if (activos == true)
-            {
-                <option value="true" selected>Activos</option>
-            }
-            else
-            {
-                <option value="true">Activos</option>
-            }
-            @if (activos == false)
-            {
-                <option value="false" selected>Inactivos</option>
-            }
-            else
-            {
-                <option value="false">Inactivos</option>
-            }
-        </select>
-
-        <button class="btn btn-success">Filtrar</button>
-    </form>
-
-    <button class="btn btn-primary" id="btnNuevo" data-url="@Url.Action("CreateModal", "Clientes")">
-        Nuevo
-    </button>
-</div>
 
 @if (TempData["ok"] != null)
 {
@@ -57,151 +16,74 @@
     <div class="alert alert-danger">@TempData["err"]</div>
 }
 
-<!-- Contenedor del grid -->
-<div id="grid">
-    @* >>> CORRECCIÓN MVC1000: usar Tag Helper <partial> en lugar de Html.Partial *@
-    <partial name="_Grid" model="Model" />
-</div>
-
-<!-- Host del modal Bootstrap 5 -->
-<div class="modal fade" id="app-modal" tabindex="-1" aria-labelledby="appModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content"><!-- se carga por AJAX --></div>
+<form method="get" class="row g-2 align-items-end mb-3">
+    <div class="col-md-5">
+        <label class="form-label">Buscar</label>
+        <input name="q" value="@q" class="form-control" placeholder="Buscar por identificación/nombre/correo" />
     </div>
-</div>
 
-@section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script>
-        // Inicializar tabla al cargar la página por primera vez
-        $(document).ready(function () {
+    <div class="col-md-3">
+        <label class="form-label">Estado</label>
+        <select name="activos" class="form-select">
+            <option value="">Todos</option>
+            <option value="true" selected="@(activos == true)">Activos</option>
+            <option value="false" selected="@(activos == false)">Inactivos</option>
+        </select>
+    </div>
 
-            if ($.fn.DataTable.isDataTable("#tblClientes")) {
-                $("#tblClientes").DataTable().destroy();
-            }
+    <div class="col-md-2">
+        <button class="btn btn-success w-100" type="submit">Filtrar</button>
+    </div>
 
-            $("#tblClientes").DataTable({
-                paging: true,
-                searching: false,
-                info: false,
-                responsive: true
-            });
-        });
+    <div class="col-md-2 text-end">
+        <a class="btn btn-primary w-100" asp-action="Create">Nuevo</a>
+    </div>
+</form>
 
-        // Cargar contenido en modal (GET parcial)
-        function openModal(url) {
-            const $modal = $("#app-modal");
-            $modal.find(".modal-content").html('<div class="p-5 text-center">Cargando...</div>');
-            const modal = new bootstrap.Modal(document.getElementById('app-modal'));
-            modal.show();
-
-            $.get(url)
-                .done(function (html) {
-                    $modal.find(".modal-content").html(html);
-                    $.validator.unobtrusive.parse($modal);
-                })
-                .fail(function () {
-                    $modal.find(".modal-content").html('<div class="p-4 text-danger">Error al cargar.</div>');
-                });
-        }
-
-        // Refrescar grid con filtros actuales
-        function refreshGrid() {
-            const q = $('input[name="q"]').val() || "";
-            const act = $('select[name="activos"]').val() || "";
-
-            const urlBase = '@Url.Action("ListPartial", "Clientes")';
-
-        $("#grid").load(
-            urlBase + "?q=" + encodeURIComponent(q) + "&activos=" + encodeURIComponent(act),
-
-                function () {
-
-                    // Destruir DataTables anterior si existe
-                    if ($.fn.DataTable.isDataTable("#tblClientes")) {
-                        $("#tblClientes").DataTable().destroy();
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Identificación</th>
+            <th>Nombre</th>
+            <th>Correo</th>
+            <th>Teléfono</th>
+            <th>Activo</th>
+            <th style="width:240px;"></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var c in Model)
+        {
+            <tr>
+                <td>@c.Identificacion</td>
+                <td>@($"{c.Nombre} {c.Apellido1} {c.Apellido2}".Trim())</td>
+                <td>@c.Correo</td>
+                <td>@c.Telefono</td>
+                <td>
+                    @if (c.Activo)
+                    {
+                        <span class="badge bg-success">Sí</span>
                     }
-
-                    // Re-inicializar DataTables
-                    $("#tblClientes").DataTable({
-                        paging: true,
-                        searching: false,
-                        info: false,
-                        responsive: true
-                    });
-                }
-            );
-        }
-
-        // Token antiforgery para POST por AJAX
-        function getToken() {
-            return $('input[name="__RequestVerificationToken"]').first().val();
-        }
-
-        // Botón Nuevo
-        $("#btnNuevo").on("click", function () {
-            openModal($(this).data("url"));
-        });
-
-        // Abrir modales desde la tabla
-        $(document).on("click", ".js-open-modal", function () {
-            openModal($(this).data("url"));
-        });
-
-        // Enviar Create/Edit por AJAX
-        $(document).on("submit", "form.js-ajax-form", function (e) {
-            e.preventDefault();
-
-            const $f = $(this);
-
-            $.ajax({
-                url: $f.attr("action"),
-                method: $f.attr("method"),
-                data: $f.serialize()
-            }).done(function (res) {
-                if (res && res.ok) {
-                    const modalEl = document.getElementById('app-modal');
-                    const modalInst = bootstrap.Modal.getInstance(modalEl);
-                    modalInst.hide();
-
-                    Swal.fire({
-                        icon: "success",
-                        title: res.msg || "Operación exitosa",
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
-
-                    refreshGrid();
-                } else {
-                    $("#app-modal .modal-content").html(res);
-                    $.validator.unobtrusive.parse($("#app-modal"));
-                }
-            }).fail(function () {
-                Swal.fire({ icon: "error", title: "Error de red" });
-            });
-        });
-
-        // Acciones POST simples
-        $(document).on("click", ".js-post", function () {
-            const url = $(this).data("url");
-
-            $.post(url, { __RequestVerificationToken: getToken() })
-                .done(function (res) {
-                    if (res.ok) {
-                        Swal.fire({
-                            icon: "success",
-                            title: res.msg,
-                            timer: 1500,
-                            showConfirmButton: false
-                        });
-
-                        refreshGrid();
-                    } else {
-                        Swal.fire({ icon: "error", title: res.msg || "Operación no realizada" });
+                    else
+                    {
+                        <span class="badge bg-secondary">No</span>
                     }
-                })
-                .fail(() => Swal.fire({ icon: "error", title: "Error de red" }));
-        });
-    </script>
+                </td>
+                <td class="text-end">
+                    <a class="btn btn-sm btn-outline-secondary" asp-action="Details" asp-route-id="@c.Id">Ver</a>
+                    <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@c.Id">Editar</a>
+                    <a class="btn btn-sm btn-outline-danger" asp-action="Delete" asp-route-id="@c.Id">Eliminar</a>
 
-}
+                    <form asp-action="Toggle" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@c.Id" />
+                        <input type="hidden" name="activo" value="@(!c.Activo)" />
+                        <button class="btn btn-sm btn-outline-dark" type="submit">
+                            @(c.Activo ? "Desactivar" : "Activar")
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

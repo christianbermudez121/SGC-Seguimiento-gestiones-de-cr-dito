@@ -6,58 +6,75 @@ namespace ProyectoSGCBLL.Services
     public class ClienteService : IClienteService
     {
         private readonly IClienteRepository _repo;
-        public ClienteService(IClienteRepository repo) { _repo = repo; }
+        public ClienteService(IClienteRepository repo) => _repo = repo;
 
-        public async Task<List<Cliente>> ListarAsync(string? filtro = null, bool? soloActivos = null)
+        public Task<List<Cliente>> ListarAsync(string? q, bool? activos) =>
+            _repo.GetAllAsync(q, activos);
+
+        public Task<Cliente?> ObtenerAsync(int id) =>
+            _repo.GetByIdAsync(id);
+
+        public async Task<(bool ok, string? error)> CrearAsync(Cliente cliente)
         {
-            var lista = await _repo.GetAllAsync();
-            var q = lista.AsQueryable();
-            if (!string.IsNullOrWhiteSpace(filtro))
-            {
-                var f = filtro.Trim().ToLower();
-                q = q.Where(c => c.Identificacion.ToLower().Contains(f)
-                              || c.Nombre.ToLower().Contains(f)
-                              || c.Apellido1.ToLower().Contains(f)
-                              || (c.Apellido2 ?? "").ToLower().Contains(f)
-                              || (c.Correo ?? "").ToLower().Contains(f));
-            }
-            if (soloActivos.HasValue) q = q.Where(c => c.Activo == soloActivos.Value);
-            return q.OrderBy(c => c.Apellido1).ThenBy(c => c.Nombre).ToList();
+            // Reglas mínimas
+            if (string.IsNullOrWhiteSpace(cliente.Identificacion))
+                return (false, "La identificación es requerida.");
+            if (string.IsNullOrWhiteSpace(cliente.Nombre) || string.IsNullOrWhiteSpace(cliente.Apellido1))
+                return (false, "Nombre y Apellido1 son requeridos.");
+
+            cliente.Identificacion = cliente.Identificacion.Trim();
+
+            if (await _repo.ExistsByIdentificacionAsync(cliente.Identificacion))
+                return (false, "Ya existe un cliente con esa identificación.");
+
+            await _repo.AddAsync(cliente);
+            return (true, null);
         }
 
-        public Task<Cliente?> ObtenerAsync(int id) => _repo.GetByIdAsync(id);
-
-        public async Task CrearAsync(Cliente c)
+        public async Task<(bool ok, string? error)> ActualizarAsync(Cliente cliente)
         {
-            if (await _repo.ExisteIdentificacionAsync(c.Identificacion))
-                throw new InvalidOperationException("La identificación ya existe.");
-            await _repo.AddAsync(c);
-            await _repo.SaveAsync();
+            var actual = await _repo.GetByIdAsync(cliente.Id);
+            if (actual == null) return (false, "Cliente no encontrado.");
+
+            if (string.IsNullOrWhiteSpace(cliente.Identificacion))
+                return (false, "La identificación es requerida.");
+
+            cliente.Identificacion = cliente.Identificacion.Trim();
+
+            if (await _repo.ExistsByIdentificacionAsync(cliente.Identificacion, cliente.Id))
+                return (false, "Ya existe otro cliente con esa identificación.");
+
+            // Mapeo controlado
+            actual.Identificacion = cliente.Identificacion;
+            actual.Nombre = cliente.Nombre?.Trim() ?? "";
+            actual.Apellido1 = cliente.Apellido1?.Trim() ?? "";
+            actual.Apellido2 = cliente.Apellido2?.Trim();
+            actual.Correo = cliente.Correo?.Trim();
+            actual.Telefono = cliente.Telefono?.Trim();
+            actual.FechaNacimiento = cliente.FechaNacimiento;
+            actual.Activo = cliente.Activo;
+
+            await _repo.UpdateAsync(actual);
+            return (true, null);
         }
 
-        public async Task ActualizarAsync(Cliente c)
+        public async Task<(bool ok, string? error)> EliminarAsync(int id)
         {
-            if (await _repo.ExisteIdentificacionAsync(c.Identificacion, c.Id))
-                throw new InvalidOperationException("La identificación ya existe.");
-            _repo.Update(c);
-            await _repo.SaveAsync();
+            var c = await _repo.GetByIdAsync(id);
+            if (c == null) return (false, "Cliente no encontrado.");
+
+            await _repo.DeleteAsync(c);
+            return (true, null);
         }
 
-        public async Task EliminarAsync(int id)
+        public async Task<(bool ok, string? error)> CambiarEstadoAsync(int id, bool activo)
         {
-            var cli = await _repo.GetByIdAsync(id) ?? throw new InvalidOperationException("Cliente no encontrado.");
-            _repo.Remove(cli);
-            await _repo.SaveAsync();
-        }
+            var c = await _repo.GetByIdAsync(id);
+            if (c == null) return (false, "Cliente no encontrado.");
 
-        public async Task DesactivarAsync(int id)
-        {
-            var cli = await _repo.GetByIdAsync(id) ?? throw new InvalidOperationException("Cliente no encontrado.");
-            cli.Activo = false; _repo.Update(cli);
-            await _repo.SaveAsync();
+            c.Activo = activo;
+            await _repo.UpdateAsync(c);
+            return (true, null);
         }
-
-        public async Task<bool> IdentificacionDisponibleAsync(string identificacion, int? excluirId = null)
-            => !(await _repo.ExisteIdentificacionAsync(identificacion, excluirId));
     }
 }

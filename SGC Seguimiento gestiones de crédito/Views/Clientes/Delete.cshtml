@@ -1,0 +1,25 @@
+﻿@model ProyectoSGCDAL.Entities.Cliente
+@{
+    ViewData["Title"] = "Eliminar Cliente";
+}
+
+<h2>Eliminar Cliente</h2>
+
+<div class="alert alert-warning mt-3">
+    ¿Seguro que deseas eliminar este cliente?
+</div>
+
+<dl class="row">
+    <dt class="col-sm-3">Identificación</dt>
+    <dd class="col-sm-9">@Model.Identificacion</dd>
+
+    <dt class="col-sm-3">Nombre</dt>
+    <dd class="col-sm-9">@($"{Model.Nombre} {Model.Apellido1} {Model.Apellido2}".Trim())</dd>
+</dl>
+
+<form asp-action="Delete" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+    <button type="submit" class="btn btn-danger">Eliminar</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+</form>

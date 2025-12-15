@@ -1,138 +1,105 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using ProyectoSGCDAL.Data;
+using ProyectoSGCBLL.Services;
 using ProyectoSGCDAL.Entities;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace SGC_Seguimiento_gestiones_de_crédito.Controllers
 {
-    
+    [Authorize] // todos los roles autenticados pueden
     public class ClientesController : Controller
     {
-        private readonly AppDbContext _db;
+        private readonly IClienteService _svc;
+        public ClientesController(IClienteService svc) => _svc = svc;
 
-        public ClientesController(AppDbContext db)
+        public async Task<IActionResult> Index(string? q, bool? activos)
         {
-            _db = db;
-        }
-
-        // GET: /Clientes
-        public async Task<IActionResult> Index(string q, bool? activos)
-        {
-            var query = _db.Clientes.AsQueryable();
-
-            if (!string.IsNullOrWhiteSpace(q))
-            {
-                query = query.Where(c =>
-                    c.Identificacion.Contains(q) ||
-                    c.Nombre.Contains(q) ||
-                    (c.Correo ?? string.Empty).Contains(q));
-            }
-
-            if (activos.HasValue)
-                query = query.Where(c => c.Activo == activos.Value);
-
-            var lista = await query.OrderByDescending(c => c.FechaRegistro).ToListAsync();
-            ViewBag.Filtro = q;
+            var lista = await _svc.ListarAsync(q, activos);
+            ViewBag.Q = q;
             ViewBag.Activos = activos;
             return View(lista);
         }
 
-        // GET partial: /Clientes/CreateModal
-        [HttpGet]
-        public IActionResult CreateModal()
+        public async Task<IActionResult> Details(int id)
         {
-            return PartialView("Create", new Cliente());
+            var c = await _svc.ObtenerAsync(id);
+            if (c == null) return NotFound();
+            return View(c);
         }
 
-        // POST AJAX: /Clientes/CreateAjax
+        public IActionResult Create() => View(new Cliente { Activo = true });
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateAjax([FromForm] Cliente model)
+        public async Task<IActionResult> Create(Cliente model)
         {
-            if (!ModelState.IsValid)
-                return PartialView("Create", model);
+            if (!ModelState.IsValid) return View(model);
 
-            // validar existencia por identificación
-            var exists = await _db.Clientes.AnyAsync(c => c.Identificacion == model.Identificacion);
-            if (exists)
+            var r = await _svc.CrearAsync(model);
+            if (!r.ok)
             {
-                ModelState.AddModelError(nameof(model.Identificacion), "Ya existe un cliente con esa identificación.");
-                return PartialView("Create", model);
+                ModelState.AddModelError("", r.error!);
+                return View(model);
             }
 
-            model.FechaRegistro = System.DateTime.UtcNow;
-            _db.Clientes.Add(model);
-            await _db.SaveChangesAsync();
-
-            return Ok(new { ok = true, msg = "Cliente creado", data = model });
+            TempData["ok"] = "Cliente creado correctamente.";
+            return RedirectToAction(nameof(Index));
         }
 
-        // GET partial: /Clientes/DetailsModal/5
-        [HttpGet]
-        public async Task<IActionResult> DetailsModal(int id)
+        public async Task<IActionResult> Edit(int id)
         {
-            var cliente = await _db.Clientes.FindAsync(id);
-            if (cliente == null) return NotFound();
-            return PartialView("_Details", cliente);
+            var c = await _svc.ObtenerAsync(id);
+            if (c == null) return NotFound();
+            return View(c);
         }
 
-        // GET partial: /Clientes/EditModal/5
-        [HttpGet]
-        public async Task<IActionResult> EditModal(int id)
-        {
-            var cliente = await _db.Clientes.FindAsync(id);
-            if (cliente == null) return NotFound();
-            return PartialView("Edit", cliente);
-        }
-
-        // POST AJAX: /Clientes/EditAjax
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditAjax([FromForm] Cliente model)
+        public async Task<IActionResult> Edit(int id, Cliente model)
         {
-            if (!ModelState.IsValid)
-                return PartialView("Edit", model);
+            if (id != model.Id) return BadRequest();
+            if (!ModelState.IsValid) return View(model);
 
-            var existente = await _db.Clientes.FindAsync(model.Id);
-            if (existente == null) return NotFound(new { message = "Cliente no encontrado" });
+            var r = await _svc.ActualizarAsync(model);
+            if (!r.ok)
+            {
+                ModelState.AddModelError("", r.error!);
+                return View(model);
+            }
 
-            existente.Nombre = model.Nombre;
-            existente.Apellido1 = model.Apellido1;
-            existente.Apellido2 = model.Apellido2;
-            existente.Correo = model.Correo;
-            existente.Telefono = model.Telefono;
-            existente.FechaNacimiento = model.FechaNacimiento;
-            existente.Activo = model.Activo;
-
-            _db.Clientes.Update(existente);
-            await _db.SaveChangesAsync();
-
-            return Ok(new { ok = true, msg = "Cliente actualizado", data = existente });
+            TempData["ok"] = "Cliente actualizado correctamente.";
+            return RedirectToAction(nameof(Index));
         }
 
-        // GET partial: /Clientes/DeleteModal/5
-        [HttpGet]
-        public async Task<IActionResult> DeleteModal(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            var cliente = await _db.Clientes.FindAsync(id);
-            if (cliente == null) return NotFound();
-            return PartialView("_Delete", cliente);
+            var c = await _svc.ObtenerAsync(id);
+            if (c == null) return NotFound();
+            return View(c);
         }
 
-        // POST AJAX: /Clientes/DeleteAjax
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            var r = await _svc.EliminarAsync(id);
+            if (!r.ok)
+            {
+                TempData["err"] = r.error;
+                return RedirectToAction(nameof(Index));
+            }
+
+            TempData["ok"] = "Cliente eliminado.";
+            return RedirectToAction(nameof(Index));
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteAjax(int id)
+        public async Task<IActionResult> Toggle(int id, bool activo)
         {
-            var cliente = await _db.Clientes.FindAsync(id);
-            if (cliente == null) return NotFound(new { message = "Cliente no encontrado" });
-
-            _db.Clientes.Remove(cliente);
-            await _db.SaveChangesAsync();
-            return Ok(new { ok = true, msg = "Cliente eliminado" });
+            var r = await _svc.CambiarEstadoAsync(id, activo);
+            if (!r.ok) TempData["err"] = r.error;
+            else TempData["ok"] = "Estado actualizado.";
+            return RedirectToAction(nameof(Index));
         }
     }
 }

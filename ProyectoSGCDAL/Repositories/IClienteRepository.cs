@@ -2,9 +2,14 @@
 
 namespace ProyectoSGCDAL.Repositories
 {
-    public interface IClienteRepository : IRepository<Cliente>
+    public interface IClienteRepository
     {
-        Task<Cliente?> GetByIdentificacionAsync(string identificacion);
-        Task<bool> ExisteIdentificacionAsync(string identificacion, int? excluirId = null);
+        Task<List<Cliente>> GetAllAsync(string? q, bool? activos);
+        Task<Cliente?> GetByIdAsync(int id);
+        Task<bool> ExistsByIdentificacionAsync(string identificacion, int? excludeId = null);
+
+        Task AddAsync(Cliente cliente);
+        Task UpdateAsync(Cliente cliente);
+        Task DeleteAsync(Cliente cliente);
     }
 }

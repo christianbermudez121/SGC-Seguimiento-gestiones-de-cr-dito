@@ -1,0 +1,26 @@
+﻿@model ProyectoSGCDAL.Entities.Cliente
+@{
+    ViewData["Title"] = "Detalle Cliente";
+}
+
+<h2>Detalle Cliente</h2>
+
+<dl class="row mt-3">
+    <dt class="col-sm-3">Identificación</dt>
+    <dd class="col-sm-9">@Model.Identificacion</dd>
+
+    <dt class="col-sm-3">Nombre</dt>
+    <dd class="col-sm-9">@($"{Model.Nombre} {Model.Apellido1} {Model.Apellido2}".Trim())</dd>
+
+    <dt class="col-sm-3">Correo</dt>
+    <dd class="col-sm-9">@Model.Correo</dd>
+
+    <dt class="col-sm-3">Teléfono</dt>
+    <dd class="col-sm-9">@Model.Telefono</dd>
+
+    <dt class="col-sm-3">Activo</dt>
+    <dd class="col-sm-9">@Model.Activo</dd>
+</dl>
+
+<a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Editar</a>
+<a asp-action="Index" class="btn btn-secondary">Volver</a>
