@@ -187,14 +187,7 @@ namespace ProyectoSGCBLL.Services
                 return respuesta;
             }
 
-            var ok = await _solicitudesrepository.EliminarSolicitudAsync(id);
-            if (!ok)
-            {
-                respuesta.EsError = true;
-                respuesta.Mensaje = "No se pudo eliminar la solicitud";
-                return respuesta;
-            }
-
+            // Agregar historial ANTES de eliminar la solicitud
             await _historialService.AgregarAsync(new HistorialGestion
             {
                 IdSolicitud = id,
@@ -204,6 +197,14 @@ namespace ProyectoSGCBLL.Services
                 UsuarioId = string.Empty,
                 Fecha = DateTime.UtcNow
             });
+
+            var ok = await _solicitudesrepository.EliminarSolicitudAsync(id);
+            if (!ok)
+            {
+                respuesta.EsError = true;
+                respuesta.Mensaje = "No se pudo eliminar la solicitud";
+                return respuesta;
+            }
 
             respuesta.Data = true;
             return respuesta;

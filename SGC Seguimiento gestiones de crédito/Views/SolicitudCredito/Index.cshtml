@@ -260,54 +260,61 @@
 
                     const result = await r.json();
 
+                    // Cerrar modal inmediatamente
+                    modal.hide();
+                    
+                    // Limpiar backdrop y resetear estado del body
+                    document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+                    document.body.classList.remove('modal-open');
+                    document.body.style.overflow = '';
+                    document.body.style.paddingRight = '';
+                    modalContent.innerHTML = '';
+
                     // EDITAR
-                   
-            if (form.action.toLowerCase().includes('edit')) {
-        const d = result.data;
+                    if (form.action.toLowerCase().includes('edit')) {
+                        const d = result.data;
 
-        table.rows().every(function () {
-            const row = this.data();
-            if (row[0] == d.id) {
-                this.data([
-                    d.id,
-                    d.identificacion,
-                    d.montoSolicitado,
-                    d.comentarios,
-                    d.documento,
-                    `
-                    <button class="btn btn-sm btn-outline-secondary js-open-modal"
-                        data-url="/SolicitudCredito/EditPartial/${d.id}">Editar</button>
-                    <button class="btn btn-sm btn-danger js-open-modal ms-1"
-                        data-url="/SolicitudCredito/DeletePartial/${d.id}">Eliminar</button>
-                    `
-                ]);
-            }
-        });
+                        // Buscar y actualizar la fila por ID
+                        table.rows().every(function () {
+                            const rowData = this.data();
+                            if (rowData[0] == d.id) {
+                                this.data([
+                                    d.id,
+                                    d.identificacion,
+                                    d.montoSolicitado,
+                                    d.comentarios,
+                                    d.documento,
+                                    `
+                                    <button class="btn btn-sm btn-outline-secondary js-open-modal"
+                                        data-url="/SolicitudCredito/EditPartial/${d.id}">Editar</button>
+                                    <button class="btn btn-sm btn-danger js-open-modal ms-1"
+                                        data-url="/SolicitudCredito/DeletePartial/${d.id}">Eliminar</button>
+                                    `
+                                ]);
+                                return false; // Detener búsqueda
+                            }
+                        });
 
-        table.draw(false);
-
-            Swal.fire('Actualizado', result.message || 'Registro actualizado', 'success');
-        }
-
+                        table.draw();
+                        Swal.fire('Actualizado', result.message || 'Registro actualizado', 'success');
+                    }
 
                     // ELIMINAR
-                           if (form.action.toLowerCase().includes('delete')) {
-            const id = result.id;
+                    if (form.action.toLowerCase().includes('delete')) {
+                        const id = result.id;
 
-            table.rows().every(function () {
-                const row = this.data();
-                if (row[0] == id) {
-                    this.remove();
-                }
-            });
+                        // Buscar y eliminar la fila por ID
+                        table.rows().every(function () {
+                            const rowData = this.data();
+                            if (rowData[0] == id) {
+                                this.remove();
+                                return false; // Detener búsqueda
+                            }
+                        });
 
-            table.draw(false);
-
-            Swal.fire('Eliminado', result.message, 'success');
-        }
-
-
-                    modal.hide();
+                        table.draw();
+                        Swal.fire('Eliminado', result.message, 'success');
+                    }
 
                 }, { once: true });
 
