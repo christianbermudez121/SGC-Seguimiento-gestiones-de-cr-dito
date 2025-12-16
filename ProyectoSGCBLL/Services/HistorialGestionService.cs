@@ -23,5 +23,10 @@ namespace ProyectoSGCBLL.Services
         {
             return await _repo.ObtenerPorSolicitudAsync(idSolicitud);
         }
+
+        public async Task<List<HistorialGestion>> ObtenerTodosAsync()
+        {
+            return await _repo.ObtenerTodosAsync();
+        }
     }
 }

@@ -20,6 +20,13 @@ namespace SGC_Seguimiento_gestiones_de_credito.Controllers
         }
 
         [HttpGet]
+        public async Task<IActionResult> ObtenerTodos()
+        {
+            var lista = await _historialService.ObtenerTodosAsync();
+            return Json(new { data = lista });
+        }
+
+        [HttpGet]
         public async Task<IActionResult> BuscarPorSolicitud(int solicitudId)
         {
             var lista = await _historialService.ObtenerPorSolicitudAsync(solicitudId);

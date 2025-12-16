@@ -9,5 +9,6 @@ namespace ProyectoSGCDAL.Repositories
         Task<bool> AgregarAsync(HistorialGestion entidad);
         Task<List<HistorialGestion>> ObtenerPorSolicitudAsync(int idSolicitud);
         Task<HistorialGestion?> ObtenerPorIdAsync(int id);
+        Task<List<HistorialGestion>> ObtenerTodosAsync();
     }
 }

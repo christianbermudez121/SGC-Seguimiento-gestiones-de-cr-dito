@@ -1,29 +1,25 @@
-﻿@using System.Linq
-
-@{
-    // Solución: Preprocesar la lista de nombres en una variable fuertemente tipada para evitar CS1977
-    var nombresClientes = ((IEnumerable<dynamic>)Model)
-        .Select(h => h.Usuario != null ? (string)h.Usuario.UserName : null)
-        .Where(n => !string.IsNullOrEmpty(n))
-        .Distinct()
-        .OrderBy(n => n)
-        .ToList();
+﻿@{
+    ViewData["Title"] = "Reporte de gestiones";
 }
 
-<h2>Reporte</h2>
+<h1>@ViewData["Title"]</h1>
 
-<div class="mb-3">
-    <label for="filterCliente" class="form-label">Filtrar por cliente (usuario)</label>
-    <input id="filterCliente" class="form-control" list="clientesList" placeholder="Escribe nombre de cliente..." />
-    <datalist id="clientesList">
-        @foreach (var nombre in nombresClientes)
-        {
-            <option value="@nombre"></option>
-        }
-    </datalist>
+<div class="row mb-3">
+    <div class="col-md-4">
+        <label for="txtFiltroUsuario" class="form-label">Filtrar por cliente (usuario)</label>
+        <input id="txtFiltroUsuario" class="form-control" placeholder="Escribe nombre de usuario..."/>
+    </div>
+    <div class="col-md-4">
+        <label for="txtSolicitudId" class="form-label">Filtrar por ID de solicitud</label>
+        <input id="txtSolicitudId" type="number" class="form-control" placeholder="ID de solicitud"/>
+    </div>
+    <div class="col-md-2 d-flex align-items-end">
+        <button id="btnBuscar" class="btn btn-primary me-2">Buscar</button>
+        <button id="btnLimpiar" class="btn btn-secondary">Limpiar</button>
+    </div>
 </div>
 
-<table id="tablaReporte" class="table table-bordered table-striped">
+<table id="tblReporte" class="table table-striped">
     <thead>
         <tr>
             <th>Fecha</th>
@@ -33,61 +29,80 @@
             <th>Comentarios</th>
         </tr>
     </thead>
-    <tbody>
-        @foreach (var h in Model)
-        {
-            <tr>
-                <td>@(h.Fecha is DateTime dt ? dt.ToString("g") : (h.Fecha?.ToString() ?? ""))</td>
-                <td>@(h.Usuario?.UserName ?? "")</td>
-                <td>@h.EstadoAnterior</td>
-                <td>@h.EstadoNuevo</td>
-                <td>@h.Comentarios</td>
-            </tr>
-        }
-    </tbody>
+    <tbody></tbody>
 </table>
 
-<p id="noResultsMessage" class="text-muted" style="display:none">No se encontraron registros.</p>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        var input = document.getElementById('filterCliente');
-        var tabla = document.getElementById('tablaReporte');
-        var tbody = tabla.querySelector('tbody');
-        var noResults = document.getElementById('noResultsMessage');
-
-        function normalize(s) {
-            return (s || '').toString().trim().toLowerCase();
-        }
-
-        function filterRows() {
-            var query = normalize(input.value);
-            var rows = Array.from(tbody.rows);
-            var visible = 0;
-
-            rows.forEach(function (row) {
-                // Usuario está en la segunda columna (índice 1)
-                var usuarioCell = row.cells[1];
-                var usuarioText = usuarioCell ? normalize(usuarioCell.textContent) : '';
-                var match = query === '' || usuarioText.indexOf(query) !== -1;
-                row.style.display = match ? '' : 'none';
-                if (match) visible++;
+@section Scripts {
+    <script>
+        $(function () {
+            var table = $('#tblReporte').DataTable({
+                columns: [
+                    { data: 'fecha', render: function (d) { return new Date(d).toLocaleString('es-ES'); } },
+                    { data: 'usuarioId' },
+                    { data: 'estadoAnterior' },
+                    { data: 'estadoNuevo' },
+                    { data: 'comentarios' }
+                ],
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json'
+                }
             });
 
-            noResults.style.display = visible === 0 ? '' : 'none';
-        }
-
-        input.addEventListener('input', filterRows);
-
-        // Si quieres limpiar el filtro con Esc:
-        input.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape') {
-                input.value = '';
-                filterRows();
+            // Cargar todos los datos al inicio
+            function cargarTodos() {
+                $.get('/Reporte/ObtenerTodos')
+                    .done(function (resp) {
+                        console.log('Datos recibidos:', resp.data);
+                        table.clear().rows.add(resp.data).draw();
+                    })
+                    .fail(function (xhr, status, error) { 
+                        console.error('Error al cargar:', error);
+                        Swal.fire('Error', 'No se pudo cargar los reportes', 'error'); 
+                    });
             }
-        });
 
-        // Inicializa estado (por si hay valor en el input al cargar)
-        filterRows();
-    });
-</script>
+            // Cargar datos al inicio
+            cargarTodos();
+
+            $('#btnBuscar').on('click', function () {
+                var usuario = $('#txtFiltroUsuario').val().trim();
+                var solicitudId = $('#txtSolicitudId').val().trim();
+                
+                if (solicitudId) {
+                    // Buscar por solicitud
+                    $.get('/Reporte/BuscarPorSolicitud', { solicitudId: solicitudId })
+                        .done(function (resp) {
+                            var datos = resp.data;
+                            // Filtrar por usuario si se especificó
+                            if (usuario) {
+                                datos = datos.filter(function(item) {
+                                    return item.usuarioId && item.usuarioId.toLowerCase().indexOf(usuario.toLowerCase()) !== -1;
+                                });
+                            }
+                            table.clear().rows.add(datos).draw();
+                        })
+                        .fail(function () { Swal.fire('Error', 'No se pudo obtener reporte', 'error'); });
+                } else if (usuario) {
+                    // Filtrar solo por usuario
+                    $.get('/Reporte/ObtenerTodos')
+                        .done(function (resp) {
+                            var datos = resp.data.filter(function(item) {
+                                return item.usuarioId && item.usuarioId.toLowerCase().indexOf(usuario.toLowerCase()) !== -1;
+                            });
+                            table.clear().rows.add(datos).draw();
+                        })
+                        .fail(function () { Swal.fire('Error', 'No se pudo obtener reporte', 'error'); });
+                } else {
+                    // Si no hay filtros, cargar todos
+                    cargarTodos();
+                }
+            });
+
+            $('#btnLimpiar').on('click', function () {
+                $('#txtFiltroUsuario').val('');
+                $('#txtSolicitudId').val('');
+                cargarTodos();
+            });
+        });
+    </script>
+}

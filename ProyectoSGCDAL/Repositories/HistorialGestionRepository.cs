@@ -39,5 +39,13 @@ namespace ProyectoSGCDAL.Repositories
         {
             return await _context.HistorialGestiones.FirstOrDefaultAsync(h => h.Id == id);
         }
+
+        public async Task<List<HistorialGestion>> ObtenerTodosAsync()
+        {
+            return await _context.HistorialGestiones
+                                 .AsNoTracking()
+                                 .OrderByDescending(h => h.Fecha)
+                                 .ToListAsync();
+        }
     }
 }

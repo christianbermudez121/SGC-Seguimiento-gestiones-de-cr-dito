@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace SGC_Seguimiento_gestiones_de_crédito.Controllers
+namespace SGC_Seguimiento_gestiones_de_credito.Controllers
 {
     [Authorize(Roles = "Administrador")]
     public class UsersAdminController : Controller

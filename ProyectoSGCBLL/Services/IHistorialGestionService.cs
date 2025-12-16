@@ -8,5 +8,6 @@ namespace ProyectoSGCBLL.Services
     {
         Task AgregarAsync(HistorialGestion entidad);
         Task<List<HistorialGestion>> ObtenerPorSolicitudAsync(int idSolicitud);
+        Task<List<HistorialGestion>> ObtenerTodosAsync();
     }
 }

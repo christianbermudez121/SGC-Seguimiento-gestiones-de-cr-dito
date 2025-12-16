@@ -6,16 +6,19 @@
 
 <div class="row mb-3">
     <div class="col-md-4">
-        <input id="txtSolicitudId" class="form-control" placeholder="Número de gestión (Id solicitud)"/>
+        <input id="txtSolicitudId" class="form-control" placeholder="NÃºmero de gestiÃ³n (Id solicitud)"/>
     </div>
     <div class="col-md-2">
         <button id="btnBuscar" class="btn btn-primary">Buscar</button>
+    </div>
+    <div class="col-md-2">
+        <button id="btnLimpiar" class="btn btn-secondary">Mostrar Todos</button>
     </div>
 </div>
 
 <table id="tblReporte" class="table table-striped">
     <thead>
-        <tr><th>Fecha</th><th>Solicitud</th><th>Acción</th><th>Usuario</th><th>Comentario</th></tr>
+        <tr><th>Fecha</th><th>Solicitud</th><th>Estado Anterior</th><th>Estado Nuevo</th><th>Usuario</th><th>Comentario</th></tr>
     </thead>
     <tbody></tbody>
 </table>
@@ -25,21 +28,49 @@
         $(function () {
             var table = $('#tblReporte').DataTable({
                 columns: [
-                    { data: 'fecha', render: function (d) { return new Date(d).toLocaleString(); } },
+                    { data: 'fecha', render: function (d) { return new Date(d).toLocaleString('es-ES'); } },
                     { data: 'idSolicitud' },
-                    { data: 'accion' },
+                    { data: 'estadoAnterior' },
+                    { data: 'estadoNuevo' },
                     { data: 'usuarioId' },
                     { data: 'comentarios' }
-                ]
+                ],
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json'
+                }
             });
+
+            // Cargar todos los datos al inicio
+            function cargarTodos() {
+                $.get('/Reporte/ObtenerTodos')
+                    .done(function (resp) {
+                        table.clear().rows.add(resp.data).draw();
+                    })
+                    .fail(function () { 
+                        Swal.fire('Error', 'No se pudo cargar los reportes', 'error'); 
+                    });
+            }
+
+            // Cargar datos al inicio
+            cargarTodos();
 
             $('#btnBuscar').on('click', function () {
                 var id = $('#txtSolicitudId').val();
+                if (!id || id.trim() === '') {
+                    // Si no hay ID, cargar todos
+                    cargarTodos();
+                    return;
+                }
                 $.get('/Reporte/BuscarPorSolicitud', { solicitudId: id })
                     .done(function (resp) {
                         table.clear().rows.add(resp.data).draw();
                     })
                     .fail(function () { Swal.fire('Error', 'No se pudo obtener reporte', 'error'); });
+            });
+
+            $('#btnLimpiar').on('click', function () {
+                $('#txtSolicitudId').val('');
+                cargarTodos();
             });
         });
     </script>

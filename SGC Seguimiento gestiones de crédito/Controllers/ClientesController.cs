@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using ProyectoSGCBLL.Services;
 using ProyectoSGCDAL.Entities;
 
-namespace SGC_Seguimiento_gestiones_de_crédito.Controllers
+namespace SGC_Seguimiento_gestiones_de_credito.Controllers
 {
     [Authorize] // todos los roles autenticados pueden
     public class ClientesController : Controller
