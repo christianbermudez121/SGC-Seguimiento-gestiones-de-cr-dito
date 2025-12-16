@@ -13,10 +13,13 @@ namespace ProyectoSGCBLL.Mapeos
     {
         public MapeoClases()
         {
-            CreateMap<SolicitudCredito, SolicitudCreditoDto>();
+            CreateMap<SolicitudCredito, SolicitudCreditoDto>()
+                .ForMember(dest => dest.Id,
+                           opt => opt.MapFrom(src => src.IdSolicitud));
 
-            CreateMap<SolicitudCreditoDto, SolicitudCredito>();
+            CreateMap<SolicitudCreditoDto, SolicitudCredito>()
+                .ForMember(dest => dest.IdSolicitud,
+                           opt => opt.MapFrom(src => src.Id));
         }
-
     }
 }

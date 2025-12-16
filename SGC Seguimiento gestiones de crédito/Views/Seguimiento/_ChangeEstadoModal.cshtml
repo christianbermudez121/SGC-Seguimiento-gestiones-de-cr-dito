@@ -1,5 +1,10 @@
 ﻿@model ProyectoSGCBLL.Dtos.SolicitudCreditoDto
 
+@{
+    var id = Model?.Id ?? 0;
+    var estado = Model?.Estado ?? "";
+}
+
 <div class="modal fade" id="estadoModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -10,68 +15,68 @@
             </div>
 
             <div class="modal-body">
-                <form id="formEstado">
-                    @Html.AntiForgeryToken()
 
-                    <input type="hidden" name="id" value="@Model.Id" />
-
-                    <div class="mb-3">
-                        <label class="form-label">Estado actual</label>
-                        <input type="text"
-                               class="form-control"
-                               value="@Model.Estado"
-                               disabled />
+                @* Si el modal se abrió sin modelo, mostramos mensaje y evitamos crash *@
+                @if (Model == null)
+                {
+                    <div class="alert alert-danger">
+                        No se pudo cargar la información de la gestión (modelo nulo).
                     </div>
+                }
+                else
+                {
+                    <form id="formEstado">
+                        @Html.AntiForgeryToken()
 
-                    <div class="mb-3">
-                        <label class="form-label">Nuevo estado</label>
-                        <select name="nuevoEstado" class="form-select" required>
+                        <input type="hidden" name="id" value="@id" />
 
-                            @* ADMIN: siempre puede cambiar *@
-                            @if (User.IsInRole("Administrador"))
-                            {
-                                <option value="">-- Seleccione --</option>
-                                <option value="Ingresado">Ingresado</option>
-                                <option value="Enviado aprobación">Enviado aprobación</option>
-                                <option value="Aprobado">Aprobado</option>
-                                <option value="Devolución">Devolución</option>
-                            }
-                            @* ANALISTA *@
-                            else if (User.IsInRole("Analista") &&
-                            (Model.Estado == "Ingresado" || Model.Estado == "Registrado"))
-                            {
-                                <option value="Enviado aprobación">Enviar a aprobación</option>
-                            }
-                            @* GESTOR *@
-                            else if (User.IsInRole("Gestor") &&
-                            Model.Estado == "Enviado aprobación")
-                            {
-                                <option value="Aprobado">Aprobar</option>
-                                <option value="Devolución">Devolver</option>
-                            }
+                        <div class="mb-3">
+                            <label class="form-label">Estado actual</label>
+                            <input type="text" class="form-control" value="@estado" disabled />
+                        </div>
 
-                        </select>
-                    </div>
+                        <div class="mb-3">
+                            <label class="form-label">Nuevo estado</label>
+                            <select name="nuevoEstado" class="form-select" required>
 
-                    <div class="mb-3">
-                        <label class="form-label">Comentarios</label>
-                        <textarea name="comentarios"
-                                  class="form-control"
-                                  rows="3"
+                                @* ADMIN: siempre puede cambiar *@
+                                @if (User.IsInRole("Administrador"))
+                                {
+                                    <option value="">-- Seleccione --</option>
+                                    <option value="Ingresado">Ingresado</option>
+                                    <option value="Enviado aprobación">Enviado aprobación</option>
+                                    <option value="Aprobado">Aprobado</option>
+                                    <option value="Devolución">Devolución</option>
+                                }
+                                @* ANALISTA *@
+                                else if (User.IsInRole("Analista") &&
+                                (estado == "Ingresado" || estado == "Registrado"))
+                                {
+                                    <option value="Enviado aprobación">Enviar a aprobación</option>
+                                }
+                                @* GESTOR *@
+                                else if (User.IsInRole("Gestor") && estado == "Enviado aprobación")
+                                {
+                                    <option value="Aprobado">Aprobar</option>
+                                    <option value="Devolución">Devolver</option>
+                                }
+
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Comentarios</label>
+                            <textarea name="comentarios" class="form-control" rows="3"
                                   placeholder="Comentario (opcional)"></textarea>
-                    </div>
+                        </div>
 
-                    <div class="text-end">
-                        <button type="submit" class="btn btn-success">
-                            Guardar
-                        </button>
-                        <button type="button"
-                                class="btn btn-secondary"
-                                data-bs-dismiss="modal">
-                            Cancelar
-                        </button>
-                    </div>
-                </form>
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-success">Guardar</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        </div>
+                    </form>
+                }
+
             </div>
 
         </div>
@@ -84,18 +89,11 @@
 
         $.post('/Seguimiento/ChangeEstado', $(this).serialize())
             .done(function () {
-                Swal.fire(
-                    'Éxito',
-                    'El estado fue actualizado correctamente',
-                    'success'
-                ).then(() => location.reload());
+                Swal.fire('Éxito', 'El estado fue actualizado correctamente', 'success')
+                    .then(() => location.reload());
             })
             .fail(function (xhr) {
-                Swal.fire(
-                    'Error',
-                    xhr.responseText || 'Error interno del servidor',
-                    'error'
-                );
+                Swal.fire('Error', xhr.responseText || 'Error interno del servidor', 'error');
             });
     });
 </script>

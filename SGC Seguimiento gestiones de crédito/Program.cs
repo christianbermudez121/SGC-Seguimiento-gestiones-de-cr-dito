@@ -27,7 +27,7 @@ builder.Services.AddScoped<IHistorialGestionService, HistorialGestionService>();
 builder.Services.AddScoped<IHistorialGestionRepository, HistorialGestionRepository>();
 builder.Services.AddScoped<IHistorialGestionService, HistorialGestionService>();
 
-builder.Services.AddAutoMapper(cfg => { }, typeof(MapeoClases));
+builder.Services.AddAutoMapper(typeof(MapeoClases).Assembly);
 
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
