@@ -30,15 +30,24 @@ namespace ProyectoSGCDAL.Repositories
                 return false;
             }
 
+            var identificacionTrim = solicitudcredito.identificacion.Trim();
             var cliente = await _context.Clientes
-                .AsNoTracking()
-                .FirstOrDefaultAsync(c => c.Identificacion == solicitudcredito.identificacion.Trim());
+                .FirstOrDefaultAsync(c => c.Identificacion == identificacionTrim);
 
             if (cliente == null)
             {
-                // Cliente no encontrado: opción por defecto es fallar y permitir que la capa superior decida.
-                // Alternativa: crear automáticamente el cliente aquí si el flujo lo requiere.
-                return false;
+                // Cliente no existe: crear uno nuevo automáticamente
+                cliente = new Cliente
+                {
+                    Identificacion = identificacionTrim,
+                    Nombre = "Cliente", // Nombre por defecto, se puede actualizar después
+                    Apellido1 = identificacionTrim, // Usar identificación como apellido temporal
+                    Activo = true,
+                    FechaRegistro = DateTime.UtcNow
+                };
+
+                await _context.Clientes.AddAsync(cliente);
+                await _context.SaveChangesAsync(); // Guardar para obtener el Id
             }
 
             solicitudcredito.IdCliente = cliente.Id;
@@ -47,9 +56,14 @@ namespace ProyectoSGCDAL.Repositories
             if (solicitudcredito.FechaSolicitud == default)
                 solicitudcredito.FechaSolicitud = DateTime.UtcNow;
 
+            // Establecer estado por defecto si no viene
+            if (string.IsNullOrWhiteSpace(solicitudcredito.Estado))
+                solicitudcredito.Estado = "Ingresado";
+
             await _context.SolicitudesCredito.AddAsync(solicitudcredito);
             var cambios = await _context.SaveChangesAsync();
 
+            // Después de SaveChangesAsync, el IdSolicitud debe estar poblado con el valor generado
             return cambios > 0;
         }
 
@@ -85,12 +99,13 @@ namespace ProyectoSGCDAL.Repositories
             var existente = await _context.SolicitudesCredito.FirstOrDefaultAsync(s => s.IdSolicitud == solicitudcredito.IdSolicitud);
             if (existente == null) return false;
 
-            existente.identificacion = solicitudcredito.identificacion;
-            existente.IdCliente = solicitudcredito.IdCliente;
+            // No actualizar identificación ni IdCliente ya que el cliente ya está asociado
+            // existente.identificacion = solicitudcredito.identificacion;
+            // existente.IdCliente = solicitudcredito.IdCliente;
+            
             existente.MontoSolicitado = solicitudcredito.MontoSolicitado;
             existente.comentarios = solicitudcredito.comentarios;
             existente.Documento = solicitudcredito.Documento;
-            existente.FechaSolicitud = solicitudcredito.FechaSolicitud;
             existente.Estado = solicitudcredito.Estado;
 
             _context.SolicitudesCredito.Update(existente);

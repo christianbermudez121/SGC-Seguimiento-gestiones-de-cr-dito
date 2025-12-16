@@ -15,11 +15,23 @@ namespace ProyectoSGCBLL.Mapeos
         {
             CreateMap<SolicitudCredito, SolicitudCreditoDto>()
                 .ForMember(dest => dest.Id,
-                           opt => opt.MapFrom(src => src.IdSolicitud));
+                           opt => opt.MapFrom(src => src.IdSolicitud))
+                .ForMember(dest => dest.Identificacion,
+                           opt => opt.MapFrom(src => src.identificacion))
+                .ForMember(dest => dest.Comentarios,
+                           opt => opt.MapFrom(src => src.comentarios))
+                .ForMember(dest => dest.Estado,
+                           opt => opt.MapFrom(src => src.Estado));
 
             CreateMap<SolicitudCreditoDto, SolicitudCredito>()
                 .ForMember(dest => dest.IdSolicitud,
-                           opt => opt.MapFrom(src => src.Id));
+                           opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.identificacion,
+                           opt => opt.MapFrom(src => src.Identificacion))
+                .ForMember(dest => dest.comentarios,
+                           opt => opt.MapFrom(src => src.Comentarios))
+                .ForMember(dest => dest.Estado,
+                           opt => opt.MapFrom(src => src.Estado));
         }
     }
 }

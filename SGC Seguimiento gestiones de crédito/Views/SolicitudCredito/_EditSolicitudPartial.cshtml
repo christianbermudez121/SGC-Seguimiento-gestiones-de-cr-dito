@@ -6,10 +6,11 @@ FormMethod.Post, new { id = "editarSolicitudForm", enctype = "multipart/form-dat
     @Html.AntiForgeryToken()
 
     <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="IdCliente" />
 
     <div class="mb-3">
-        <label for="Identificacion" class="form-label">Identificación</label>
-        <input asp-for="Identificacion" class="form-control" id="Identificacion"  />
+        <label for="Identificacion" class="form-label">Identificaciï¿½n</label>
+        <input asp-for="Identificacion" class="form-control" id="Identificacion" readonly />
     </div>
 
     <div class="mb-3">
@@ -31,7 +32,7 @@ FormMethod.Post, new { id = "editarSolicitudForm", enctype = "multipart/form-dat
         <label asp-for="Estado" class="form-label"></label>
         <select asp-for="Estado" class="form-control">
             <option value="Registrado">Registrado</option>
-            <option value="Devolucion">Devolución</option>
+            <option value="Devolucion">Devoluciï¿½n</option>
             <option value="Aprobado">Aprobado</option>
             <option value="Rechazado">Rechazado</option>
         </select>

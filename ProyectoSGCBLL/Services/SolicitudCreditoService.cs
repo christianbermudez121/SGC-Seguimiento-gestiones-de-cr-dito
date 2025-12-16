@@ -28,7 +28,20 @@ namespace ProyectoSGCBLL.Services
         {
             var respuesta = new CustomResponse<SolicitudCreditoDto>();
 
-            var existente = await _solicitudesrepository.ObtenerActivaPorIdentificacionAsync(dto.Identificacion);
+            // Validar campos requeridos
+            if (string.IsNullOrWhiteSpace(dto.Identificacion))
+            {
+                respuesta.EsError = true;
+                respuesta.Mensaje = "La identificación es requerida.";
+                return respuesta;
+            }
+
+            if (dto.MontoSolicitado <= 0)
+            {
+                respuesta.EsError = true;
+                respuesta.Mensaje = "El monto solicitado debe ser mayor a 0.";
+                return respuesta;
+            }
 
             if (dto.MontoSolicitado > 10000000)
             {
@@ -36,6 +49,8 @@ namespace ProyectoSGCBLL.Services
                 respuesta.Mensaje = "No se puede ingresar una solicitud por un monto mayor a 10.000.000 colones.";
                 return respuesta;
             }
+
+            var existente = await _solicitudesrepository.ObtenerActivaPorIdentificacionAsync(dto.Identificacion);
 
             if (existente != null)
             {
@@ -46,19 +61,25 @@ namespace ProyectoSGCBLL.Services
             }
 
             var entidad = _mapper.Map<SolicitudCredito>(dto);
+            
+            // Establecer estado inicial si no viene especificado
+            if (string.IsNullOrWhiteSpace(entidad.Estado))
+            {
+                entidad.Estado = "Ingresado";
+            }
 
             var creado = await _solicitudesrepository.AgregarSolicitudAsync(entidad);
             if (!creado)
             {
                 respuesta.EsError = true;
-                respuesta.Mensaje = "No se pudo crear la solicitud.";
+                respuesta.Mensaje = "No se pudo crear la solicitud. Por favor, intente nuevamente.";
                 return respuesta;
             }
 
             await _historialService.AgregarAsync(new HistorialGestion
             {
                 IdSolicitud = entidad.IdSolicitud,
-                EstadoAnterior = null,
+                EstadoAnterior = string.Empty,
                 EstadoNuevo = "Ingresado",
                 Comentarios = "Solicitud creada",
                 UsuarioId = dto.UsuarioId ?? string.Empty,
@@ -126,6 +147,11 @@ namespace ProyectoSGCBLL.Services
 
             var entidad = _mapper.Map<SolicitudCredito>(solicitud);
             entidad.IdSolicitud = solicitud.Id;
+            // Preservar el IdCliente existente si no viene en el DTO
+            if (entidad.IdCliente == 0)
+            {
+                entidad.IdCliente = existente.IdCliente;
+            }
 
             var ok = await _solicitudesrepository.ActualizarSolicitudAsync(entidad);
             if (!ok)
